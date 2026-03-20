@@ -24,7 +24,7 @@ There are two deployable units that share a single KV namespace:
 | Infra CLI | Wrangler 4 |
 | CF types | @cloudflare/workers-types 4 |
 
-There is **no traditional database, no Node.js server, and no test framework** — the project runs entirely on Cloudflare's edge.
+There is **no traditional database, no persistent Node.js server in production, and no test framework** — the production runtime runs entirely on Cloudflare's edge (Node.js is used only for local development and build tooling).
 
 ---
 
@@ -137,7 +137,7 @@ Additional types: `DestinationConfig`, `DomainStats`, `Session`.
 |---|---|
 | `domain:{domain}` | JSON-serialized `DomainConfig` |
 | `alias:{domain}/{localPart}` | JSON-serialized `AliasConfig` |
-| (destinations list) | stored under a destinations key |
+| `destination:{email}` | JSON-serialized `DestinationAddress` |
 
 All KV reads/writes go through helpers in `src/lib/kv.ts`. The KV binding is named `KV` and accessed via `platform.env.KV` in server code.
 
