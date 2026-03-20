@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	* {
+		box-sizing: border-box;
+	}
+
+	html,
+	body {
+		height: 100%;
+		margin: 0;
+		padding: 0;
+		background-color: #1b1e2f;
+		color: #dde1f5;
+	}
+
+	/* Native <dialog> reset — visual styling is handled by inner Tailwind classes */
+	dialog {
+		padding: 0;
+		background: transparent;
+		border: none;
+		color: inherit;
+		max-width: calc(100vw - 2rem);
+		max-height: calc(100dvh - 2rem);
+	}
+
+	dialog::backdrop {
+		background: rgba(0, 0, 0, 0.65);
+		backdrop-filter: blur(4px);
+	}
+
+	::-webkit-scrollbar {
+		width: 6px;
+		height: 6px;
+	}
+	::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	::-webkit-scrollbar-thumb {
+		background: #2b2f4c;
+		border-radius: 9999px;
+	}
+	::-webkit-scrollbar-thumb:hover {
+		background: #3a4070;
+	}
+}

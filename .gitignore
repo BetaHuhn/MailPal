@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+email-worker/node_modules/
+
+# SvelteKit build output
+.svelte-kit/
+build/
+
+# Cloudflare / Wrangler
+.wrangler/
+email-worker/.wrangler/
+*.d1.sqlite
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Coding Agents
+.claude/

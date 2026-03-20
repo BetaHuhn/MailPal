@@ -1,0 +1,85 @@
+import type { KVNamespace, EmailMessage, ExecutionContext } from '@cloudflare/workers-types';
+import type { AliasConfig, DomainConfig } from '../../src/lib/types.js';
+
+interface Env {
+	KV: KVNamespace;
+}
+
+export default {
+	async email(message: EmailMessage, env: Env, ctx: ExecutionContext): Promise<void> {
+		const to = message.to;
+		const atIdx = to.indexOf('@');
+
+		if (atIdx === -1) {
+			message.setReject('Invalid address');
+			return;
+		}
+
+		const localPart = to.slice(0, atIdx).toLowerCase();
+		const domain = to.slice(atIdx + 1).toLowerCase();
+
+		// 1. Load domain config
+		const domainVal = await env.KV.get(`domain:${domain}`);
+		if (!domainVal) {
+			message.setReject('Unknown domain');
+			return;
+		}
+
+		const domainConfig = JSON.parse(domainVal) as DomainConfig;
+		if (!domainConfig.enabled) {
+			message.setReject('Domain disabled');
+			return;
+		}
+
+		// 2. Load alias
+		const aliasKey = `alias:${domain}/${localPart}`;
+		let aliasVal = await env.KV.get(aliasKey);
+		let aliasConfig: AliasConfig | null = aliasVal ? JSON.parse(aliasVal) : null;
+
+		// 3. Wildcard auto-create
+		if (!aliasConfig && domainConfig.wildcardEnabled) {
+			aliasConfig = {
+				localPart,
+				domain,
+				targetEmail: null,
+				enabled: true,
+				createdAt: Date.now(),
+				forwardedCount: 0,
+				blockedCount: 0,
+				lastUsedAt: null,
+				autoCreated: true
+			};
+			ctx.waitUntil(env.KV.put(aliasKey, JSON.stringify(aliasConfig)));
+		}
+
+		// 4. Still not found
+		if (!aliasConfig) {
+			message.setReject('Unknown alias');
+			return;
+		}
+
+		// 5. Alias disabled
+		if (!aliasConfig.enabled) {
+			const updated: AliasConfig = {
+				...aliasConfig,
+				blockedCount: aliasConfig.blockedCount + 1,
+				lastUsedAt: Date.now()
+			};
+			ctx.waitUntil(env.KV.put(aliasKey, JSON.stringify(updated)));
+			message.setReject('Alias disabled');
+			return;
+		}
+
+		// 6. Resolve target and forward
+		const target = aliasConfig.targetEmail ?? domainConfig.targetEmail;
+		await message.forward(target);
+
+		// 7. Update stats async
+		const updated: AliasConfig = {
+			...aliasConfig,
+			forwardedCount: aliasConfig.forwardedCount + 1,
+			lastUsedAt: Date.now()
+		};
+		ctx.waitUntil(env.KV.put(aliasKey, JSON.stringify(updated)));
+	}
+} satisfies ExportedHandler<Env>;

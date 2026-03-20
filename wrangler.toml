@@ -1,0 +1,8 @@
+name = "mailpal"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".svelte-kit/cloudflare"
+
+[[kv_namespaces]]
+binding = "KV"
+id = "d2fb6454c4ba4240a7c4ca55d548ed2d"
