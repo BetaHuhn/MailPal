@@ -4,6 +4,7 @@ export interface DomainConfig {
 	wildcardEnabled: boolean;
 	enabled: boolean;
 	createdAt: number;
+	color?: string;
 }
 
 export interface DestinationAddress {

@@ -13,13 +13,15 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	if (!config) return json({ error: 'Not found' }, { status: 404 });
 
 	const body = await request.json();
-	const { targetEmail, wildcardEnabled, enabled } = body;
+	const { targetEmail, wildcardEnabled, enabled, color } = body;
 
 	const updated = {
 		...config,
 		...(targetEmail !== undefined && { targetEmail }),
 		...(wildcardEnabled !== undefined && { wildcardEnabled }),
-		...(enabled !== undefined && { enabled })
+		...(enabled !== undefined && { enabled }),
+		// null clears the custom color (reverts to auto); undefined means not sent
+		...(color !== undefined && { color: color ?? undefined })
 	};
 
 	await putDomain(locals.kv, updated);

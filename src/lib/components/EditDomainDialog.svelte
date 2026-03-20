@@ -3,6 +3,7 @@
 	import { Switch, AlertDialog } from 'bits-ui';
 	import Dialog from './Dialog.svelte';
 	import DestinationSelect from './DestinationSelect.svelte';
+	import ColorPicker from './ColorPicker.svelte';
 
 	let {
 		open,
@@ -23,6 +24,7 @@
 	let targetEmail = $state(domain.targetEmail);
 	let wildcardEnabled = $state(domain.wildcardEnabled);
 	let enabled = $state(domain.enabled);
+	let color = $state<string | undefined>(domain.color);
 	let saving = $state(false);
 	let deleting = $state(false);
 	let error = $state('');
@@ -32,6 +34,7 @@
 			targetEmail = domain.targetEmail;
 			wildcardEnabled = domain.wildcardEnabled;
 			enabled = domain.enabled;
+			color = domain.color;
 			error = '';
 		}
 	});
@@ -44,7 +47,7 @@
 			const res = await fetch(`/api/domains/${domain.domain}`, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ targetEmail, wildcardEnabled, enabled })
+				body: JSON.stringify({ targetEmail, wildcardEnabled, enabled, color: color ?? null })
 			});
 			const body = await res.json();
 			if (!res.ok) {
@@ -73,9 +76,12 @@
 <Dialog {open} title="Domain settings" subtitle={domain.domain} onClose={onClose}>
 	<form onsubmit={submit} class="p-6 space-y-4">
 		<div>
-			<label for="ed-target" class="block text-sm font-medium text-app-text mb-1.5">
-				Default target email
-			</label>
+			<div class="flex items-center justify-between mb-1.5">
+				<label for="ed-target" class="text-sm font-medium text-app-text">
+					Default target email
+				</label>
+				<ColorPicker bind:value={color} />
+			</div>
 			<DestinationSelect
 				id="ed-target"
 				{destinations}

@@ -30,6 +30,8 @@
 		'#3b82f6', '#ec4899', '#14b8a6', '#f97316', '#06b6d4'
 	];
 	function domainColor(d: string): string {
+		const domain = domains.find((x) => x.domain === d);
+		if (domain?.color) return domain.color;
 		const idx = domains.findIndex((x) => x.domain === d);
 		return PALETTE[(idx >= 0 ? idx : 0) % PALETTE.length];
 	}
