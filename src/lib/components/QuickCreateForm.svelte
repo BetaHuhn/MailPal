@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { AliasConfig, DomainConfig } from '$lib/types.js';
 	import { generateSlug } from '$lib/sluggen.js';
-	import { Select } from 'bits-ui';
+	import { Select, Tooltip } from 'bits-ui';
 
 	let {
 		domains,
@@ -79,23 +79,33 @@
 					/>
 
 					<!-- Randomize -->
-					<button
-						type="button"
-						onclick={() => (newLocalPart = generateSlug())}
-						aria-label="Generate a random alias name"
-						title="Generate random alias"
-						class="px-3 border-l border-app-border text-app-muted hover:text-app-accent transition-colors"
-					>
-						<!-- Dice icon -->
-						<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-							<rect x="3" y="3" width="18" height="18" rx="3" ry="3" stroke-width="2"/>
-							<circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none"/>
-							<circle cx="15.5" cy="8.5" r="1.5" fill="currentColor" stroke="none"/>
-							<circle cx="8.5" cy="15.5" r="1.5" fill="currentColor" stroke="none"/>
-							<circle cx="15.5" cy="15.5" r="1.5" fill="currentColor" stroke="none"/>
-							<circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
-						</svg>
-					</button>
+					<Tooltip.Root delayDuration={300}>
+						<Tooltip.Trigger
+							type="button"
+							onclick={() => (newLocalPart = generateSlug())}
+							aria-label="Generate a random alias name"
+							class="px-3 border-l border-app-border text-app-muted hover:text-app-accent transition-colors"
+						>
+							<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+								<rect x="3" y="3" width="18" height="18" rx="3" ry="3" stroke-width="2"/>
+								<circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none"/>
+								<circle cx="15.5" cy="8.5" r="1.5" fill="currentColor" stroke="none"/>
+								<circle cx="8.5" cy="15.5" r="1.5" fill="currentColor" stroke="none"/>
+								<circle cx="15.5" cy="15.5" r="1.5" fill="currentColor" stroke="none"/>
+								<circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/>
+							</svg>
+						</Tooltip.Trigger>
+						<Tooltip.Portal>
+							<Tooltip.Content
+								class="z-50 px-2 py-1 rounded-md bg-app-surface border border-app-border text-xs text-app-text shadow-md"
+								sideOffset={8}
+								side="bottom"
+							>
+								Generate random alias
+								<Tooltip.Arrow class="text-app-border" />
+							</Tooltip.Content>
+						</Tooltip.Portal>
+					</Tooltip.Root>
 
 					<!-- Domain selector: plain label when one domain, dropdown when multiple -->
 					{#if domains.length === 1}
