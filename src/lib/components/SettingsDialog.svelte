@@ -274,7 +274,7 @@
 			<ul class="space-y-2" aria-label="Tags">
 				{#each tags as tag (tag.name)}
 					<li class="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-app-hover border border-app-border">
-						<ColorPicker bind:value={tag.color} size={3} onChange={(value) => handleUpdateTag({ ...tag, color: value })} />
+						<ColorPicker bind:value={tag.color} size={3} onChange={(value) => { if (value) handleUpdateTag({ ...tag, color: value }); }} />
 						<span class="flex-1 text-sm text-app-text">{tag.name}</span>
 						<button
 							onclick={() => handleDeleteTag(tag.name)}
