@@ -291,42 +291,57 @@
 >
 	<!-- ── Collapsed row ─────────────────────────────────────────────────── -->
 	<div
-		class="group flex items-center gap-3 px-4 py-3 {selectionMode ? 'cursor-pointer' : ''}"
+		class="group flex items-center gap-4 px-4 py-3 {selectionMode ? 'cursor-pointer' : ''}"
 		onclick={(e) => {
 			if ((e.target as HTMLElement).closest('button, a, input, textarea, select')) return;
 			onSelect?.(!selected);
 		}}
 	>
 
-		<!-- Selection checkbox (only in selection mode) -->
-		{#if selectionMode}
-			<button
-				type="button"
-				onclick={(e) => { e.stopPropagation(); onSelect?.(!selected); }}
-				aria-label="Select {fullAddress}"
-				aria-pressed={selected}
-				class="shrink-0 w-3.5 h-3.5 rounded border transition-all
-					{selected
-						? 'bg-app-accent border-app-accent flex items-center justify-center'
-						: 'border-app-border bg-app-hover hover:border-app-accent/50'}"
-			>
-				{#if selected}
-					<svg class="w-2 h-2 text-app-bg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M5 13l4 4L19 7" />
-					</svg>
-				{/if}
-			</button>
-		{/if}
+		<div class="flex items-center gap-3 shrink-0 flex-1 min-w-0">
+			<!-- Selection checkbox (only in selection mode) -->
+			{#if selectionMode}
+				<button
+					type="button"
+					onclick={(e) => { e.stopPropagation(); onSelect?.(!selected); }}
+					aria-label="Select {fullAddress}"
+					aria-pressed={selected}
+					class="shrink-0 w-3.5 h-3.5 rounded border transition-all
+						{selected
+							? 'bg-app-accent border-app-accent flex items-center justify-center'
+							: 'border-app-border bg-app-hover hover:border-app-accent/50'}"
+				>
+					{#if selected}
+						<svg class="w-2 h-2 text-app-bg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M5 13l4 4L19 7" />
+						</svg>
+					{/if}
+				</button>
+			{:else if showDomain}
+				<span class="hidden sm:inline-flex items-center gap-1.5 px-1 py-1 rounded-lg bg-app-hover text-xs text-app-text/80 shrink-0">
+					<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {color}" aria-hidden="true"></span>
+				</span>
+			{/if}
 
-		<!-- Address + inline tags + note preview -->
-		<div class="flex-1 min-w-0">
-			<div class="flex items-center gap-1.5 flex-wrap">
-				<span class="font-semibold text-app-text text-sm">{alias.localPart}</span>
-				<span class="text-app-muted text-sm shrink-0">@{alias.domain}</span>
-				<div class="opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-					<CopyButton text={fullAddress} />
+			<!-- Address + inline tags + note preview -->
+			<div class="flex-1 min-w-0">
+				<div class="flex items-center gap-1.5 flex-wrap">
+					<span class="font-semibold text-app-text text-sm">{alias.localPart}</span>
+					<span class="text-app-muted text-sm shrink-0">@{alias.domain}</span>
+					<div class="opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+						<CopyButton text={fullAddress} />
+					</div>
 				</div>
-				<!-- Tag pills — same style as domain badge, visible sm+ -->
+				<!-- Note preview (collapsed only) -->
+				{#if !expanded && alias.note}
+					<p class="text-xs text-app-muted mt-0.5 truncate">{alias.note}</p>
+				{/if}
+			</div>
+		</div>
+
+		<!-- Tag pills — same style as domain badge, visible sm+ -->
+		{#if aliasTags.length > 0}
+			<div class="flex items-center gap-1.5 shrink-0">
 				{#each aliasTags as tag (tag.name)}
 					<button
 						type="button"
@@ -338,18 +353,6 @@
 					</button>
 				{/each}
 			</div>
-			<!-- Note preview (collapsed only) -->
-			{#if !expanded && alias.note}
-				<p class="text-xs text-app-muted mt-0.5 truncate">{alias.note}</p>
-			{/if}
-		</div>
-
-		<!-- Domain badge -->
-		{#if showDomain}
-			<span class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-app-hover text-xs text-app-text/80 shrink-0">
-				<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {color}" aria-hidden="true"></span>
-				{alias.domain}
-			</span>
 		{/if}
 
 		<!-- Auto badge -->
@@ -437,7 +440,7 @@
 				onclick={handleToggle}
 				disabled={toggling}
 				aria-pressed={alias.enabled}
-				class="flex items-center justify-end gap-2 min-w-24 group/toggle disabled:opacity-60"
+				class="flex items-center justify-end gap-2 min-w-[5.5rem] group/toggle disabled:opacity-60"
 			>
 				<div
 					class="w-3 h-3 rounded-full shrink-0 transition-all group-hover/toggle:scale-110 group-hover/toggle:brightness-125

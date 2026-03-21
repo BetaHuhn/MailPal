@@ -279,7 +279,7 @@
 					type="submit"
 					disabled={creating || !newDomain}
 					aria-busy={creating}
-					class="px-5 py-2.5 rounded-lg bg-app-accent text-app-bg text-sm font-semibold hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+					class="px-5 py-2.5 rounded-lg bg-app-accent text-app-bg text-sm border border-app-bg font-semibold hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
 				>
 					Create
 				</button>
