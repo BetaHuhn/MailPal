@@ -1,6 +1,13 @@
 {
   "name": "mailpal-email-worker",
   "version": "0.0.1",
+  "license": "GPL-3.0-only",
+  "author": "Maximilian Schiller <github@mxis.ch>",
+  "description": "A privacy-focused email forwarding service built on Cloudflare Workers",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/betahuhn/mailpal.git"
+  },
   "private": true,
   "scripts": {
     "dev": "wrangler dev",
