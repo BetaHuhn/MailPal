@@ -7,13 +7,22 @@
 		domains,
 		defaultDomain,
 		onCreated,
-		onAddDomain
+		onAddDomain,
+		focusTrigger = 0
 	}: {
 		domains: DomainConfig[];
 		defaultDomain: string;
 		onCreated: (alias: AliasConfig) => void;
 		onAddDomain: () => void;
+		focusTrigger?: number;
 	} = $props();
+
+	let localPartInputEl = $state<HTMLInputElement | null>(null);
+
+	$effect(() => {
+		focusTrigger;
+		if (focusTrigger && localPartInputEl) localPartInputEl.focus();
+	});
 
 	let newLocalPart = $state('');
 	let newDomain = $state(defaultDomain);
@@ -69,6 +78,7 @@
 				>
 					<label for="new-local-part" class="sr-only">Alias local part</label>
 					<input
+						bind:this={localPartInputEl}
 						id="new-local-part"
 						bind:value={newLocalPart}
 						type="text"

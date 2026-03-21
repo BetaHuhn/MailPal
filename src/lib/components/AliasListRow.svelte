@@ -23,7 +23,12 @@
 		onTagClick,
 		onAliasUpdated,
 		onDeleted,
-		onTagCreated
+		onTagCreated,
+		selected = false,
+		selectionMode = false,
+		onSelect,
+		focused = false,
+		expandTrigger = 0
 	}: {
 		alias: AliasConfig;
 		tags: Tag[];
@@ -36,10 +41,21 @@
 		onAliasUpdated: (alias: AliasConfig) => void;
 		onDeleted: (alias: AliasConfig) => void;
 		onTagCreated: (tag: Tag) => void;
+		selected?: boolean;
+		selectionMode?: boolean;
+		onSelect?: (v: boolean) => void;
+		focused?: boolean;
+		expandTrigger?: number;
 	} = $props();
 
 	let toggling = $state(false);
 	let expanded = $state(false);
+
+	// Programmatic expand from keyboard shortcut
+	$effect(() => {
+		if (expandTrigger > 0) expanded = true;
+		else expanded = false;
+	});
 
 	// Editable state (synced from alias prop)
 	let editTargetEmail = $state(alias.targetEmail ?? '');
@@ -176,12 +192,40 @@
 
 <div
 	class="rounded-xl border bg-app-surface transition-colors duration-150
-		{expanded
+		{focused
+			? 'border-app-accent/50 ring-1 ring-app-accent/20'
+			: expanded
 			? 'border-app-hover'
 			: 'border-app-border hover:border-app-hover hover:bg-app-hover/40'}"
 >
 	<!-- ── Collapsed row ─────────────────────────────────────────────────── -->
-	<div class="group flex items-center gap-3 px-4 py-3">
+	<div
+		class="group flex items-center gap-3 px-4 py-3 {selectionMode ? 'cursor-pointer' : ''}"
+		onclick={(e) => {
+			if ((e.target as HTMLElement).closest('button, a, input, textarea, select')) return;
+			onSelect?.(!selected);
+		}}
+	>
+
+		<!-- Selection checkbox (only in selection mode) -->
+		{#if selectionMode}
+			<button
+				type="button"
+				onclick={(e) => { e.stopPropagation(); onSelect?.(!selected); }}
+				aria-label="Select {fullAddress}"
+				aria-pressed={selected}
+				class="shrink-0 w-3.5 h-3.5 rounded border transition-all
+					{selected
+						? 'bg-app-accent border-app-accent flex items-center justify-center'
+						: 'border-app-border bg-app-hover hover:border-app-accent/50'}"
+			>
+				{#if selected}
+					<svg class="w-2 h-2 text-app-bg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3.5" d="M5 13l4 4L19 7" />
+					</svg>
+				{/if}
+			</button>
+		{/if}
 
 		<!-- Address + inline tags + note preview -->
 		<div class="flex-1 min-w-0">
