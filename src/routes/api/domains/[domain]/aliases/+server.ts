@@ -18,7 +18,7 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 	if (!domain) return json({ error: 'Domain not found' }, { status: 404 });
 
 	const body = await request.json().catch(() => ({}));
-	let { localPart, targetEmail = null, note, tags } = body as { localPart?: string; targetEmail?: string | null; note?: string; tags?: string[] };
+	let { localPart, targetEmail = null, note, tags, expiresAt, maxForwards } = body as { localPart?: string; targetEmail?: string | null; note?: string; tags?: string[]; expiresAt?: number; maxForwards?: number };
 
 	if (!localPart) {
 		// Auto-generate unique slug
@@ -47,7 +47,9 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		lastUsedAt: null,
 		autoCreated: false,
 		...(note && { note }),
-		...(tags && { tags })
+		...(tags && { tags }),
+		...(expiresAt != null && { expiresAt }),
+		...(maxForwards != null && { maxForwards })
 	};
 
 	await putAlias(locals.kv, config);

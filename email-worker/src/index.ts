@@ -70,6 +70,32 @@ export default {
 			return;
 		}
 
+		// 5a. Date expiry
+		if (aliasConfig.expiresAt && Date.now() > aliasConfig.expiresAt) {
+			const updated: AliasConfig = {
+				...aliasConfig,
+				enabled: false,
+				blockedCount: aliasConfig.blockedCount + 1,
+				lastUsedAt: Date.now()
+			};
+			ctx.waitUntil(env.KV.put(aliasKey, JSON.stringify(updated)));
+			message.setReject('Alias expired');
+			return;
+		}
+
+		// 5b. Forward count limit
+		if (aliasConfig.maxForwards != null && aliasConfig.forwardedCount >= aliasConfig.maxForwards) {
+			const updated: AliasConfig = {
+				...aliasConfig,
+				enabled: false,
+				blockedCount: aliasConfig.blockedCount + 1,
+				lastUsedAt: Date.now()
+			};
+			ctx.waitUntil(env.KV.put(aliasKey, JSON.stringify(updated)));
+			message.setReject('Forward limit reached');
+			return;
+		}
+
 		// 6. Resolve target and forward
 		const target = aliasConfig.targetEmail ?? domainConfig.targetEmail;
 		await message.forward(target);

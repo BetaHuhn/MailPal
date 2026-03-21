@@ -62,6 +62,24 @@
 	let editNote = $state(alias.note ?? '');
 	let editTags = $state<string[]>(alias.tags ?? []);
 	let saving = $state(false);
+
+	// Expiry state
+	type ExpiryMode = 'none' | 'date' | 'count';
+	let expiryMode = $state<ExpiryMode>(
+		alias.expiresAt ? 'date' : alias.maxForwards != null ? 'count' : 'none'
+	);
+	let editExpiresAt = $state<number | null>(alias.expiresAt ?? null);
+	let editMaxForwards = $state<number | null>(alias.maxForwards ?? null);
+
+	function tsToDateInput(ts: number | null): string {
+		if (!ts) return '';
+		return new Date(ts).toISOString().slice(0, 10);
+	}
+	function dateInputToTs(s: string): number | null {
+		if (!s) return null;
+		const [y, m, d] = s.split('-').map(Number);
+		return new Date(y, m - 1, d).getTime(); // local midnight avoids UTC offset shifting the date
+	}
 	let saveError = $state('');
 	let deleting = $state(false);
 
@@ -80,13 +98,37 @@
 			.filter((t): t is Tag => t !== undefined)
 	);
 
+	const expiryBadge = $derived.by((): { label: string; urgency: 'normal' | 'warn' | 'critical' } | null => {
+		if (alias.expiresAt) {
+			const now = Date.now();
+			if (now >= alias.expiresAt) return { label: 'Expired', urgency: 'critical' };
+			// Compare calendar days in local time to avoid timezone-shifted "today" labels
+			const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+			const expStart = new Date(alias.expiresAt); expStart.setHours(0, 0, 0, 0);
+			const days = Math.round((expStart.getTime() - todayStart.getTime()) / 86_400_000);
+			if (days === 0) return { label: 'Expires today', urgency: 'critical' };
+			if (days === 1) return { label: 'Expires tomorrow', urgency: 'warn' };
+			if (days <= 7) return { label: `Expires in ${days}d`, urgency: 'warn' };
+			return { label: `Exp. ${new Date(alias.expiresAt).toLocaleDateString()}`, urgency: 'normal' };
+		}
+		if (alias.maxForwards != null) {
+			const left = alias.maxForwards - alias.forwardedCount;
+			if (left <= 0) return { label: 'Limit reached', urgency: 'critical' };
+			if (left <= 5) return { label: `${left} fwd left`, urgency: 'warn' };
+			return { label: `${alias.forwardedCount}/${alias.maxForwards} fwd`, urgency: 'normal' };
+		}
+		return null;
+	});
+
 	// Dirty detection — compare local edit state against the current alias prop
 	const dirty = $derived(
 		editNote.trim() !== (alias.note ?? '').trim() ||
 		(editTargetEmail || null) !== alias.targetEmail ||
 		editTags.length !== (alias.tags?.length ?? 0) ||
 		editTags.some((t) => !(alias.tags ?? []).includes(t)) ||
-		(alias.tags ?? []).some((t) => !editTags.includes(t))
+		(alias.tags ?? []).some((t) => !editTags.includes(t)) ||
+		(expiryMode === 'date' ? editExpiresAt : null) !== (alias.expiresAt ?? null) ||
+		(expiryMode === 'count' ? editMaxForwards : null) !== (alias.maxForwards ?? null)
 	);
 
 	// Sync local edit state when alias prop changes (e.g. after a save)
@@ -94,6 +136,9 @@
 		editTargetEmail = alias.targetEmail ?? '';
 		editNote = alias.note ?? '';
 		editTags = [...(alias.tags ?? [])];
+		editExpiresAt = alias.expiresAt ?? null;
+		editMaxForwards = alias.maxForwards ?? null;
+		expiryMode = alias.expiresAt ? 'date' : alias.maxForwards != null ? 'count' : 'none';
 	});
 
 	async function handleToggle() {
@@ -133,7 +178,9 @@
 				body: JSON.stringify({
 					targetEmail: editTargetEmail || null,
 					note: editNote.trim() || null,
-					tags: editTags
+					tags: editTags,
+					expiresAt: expiryMode === 'date' ? editExpiresAt : null,
+					maxForwards: expiryMode === 'count' ? editMaxForwards : null
 				})
 			});
 			if (res.ok) {
@@ -280,6 +327,24 @@
 					</Tooltip.Content>
 				</Tooltip.Portal>
 			</Tooltip.Root>
+		{/if}
+
+		<!-- Expiry badge -->
+		{#if expiryBadge && !expanded}
+			<span
+				class="hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs shrink-0
+					{expiryBadge.urgency === 'critical'
+						? 'bg-red-400/10 text-red-400'
+						: expiryBadge.urgency === 'warn'
+						? 'bg-amber-400/10 text-amber-400'
+						: 'bg-app-hover text-app-muted'}"
+			>
+				<svg class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+					<circle cx="12" cy="12" r="9" stroke-width="2" />
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7v5l3 3" />
+				</svg>
+				{expiryBadge.label}
+			</span>
 		{/if}
 
 		<!-- Stats -->
@@ -489,6 +554,55 @@
 							</form>
 						{/if}
 					</div>
+				</div>
+
+				<!-- Auto-disable -->
+				<div class="space-y-1.5">
+					<p class="text-xs font-medium text-app-muted">Auto-disable</p>
+					<div class="flex gap-1.5 flex-wrap">
+						{#each (['none', 'date', 'count'] as const) as mode (mode)}
+							{@const label = mode === 'none' ? 'Never' : mode === 'date' ? 'After date' : 'After N emails'}
+							<button
+								type="button"
+								onclick={() => { expiryMode = mode; }}
+								class="px-2.5 py-1 rounded-md text-xs transition-colors
+									{expiryMode === mode
+										? 'bg-app-accent text-app-bg font-medium'
+										: 'bg-app-hover text-app-muted hover:text-app-text border border-app-border'}"
+							>
+								{label}
+							</button>
+						{/each}
+					</div>
+					{#if expiryMode === 'date'}
+						<div class="flex items-center gap-2 flex-wrap">
+							<input
+								type="date"
+								value={tsToDateInput(editExpiresAt)}
+								onchange={(e) => (editExpiresAt = dateInputToTs(e.currentTarget.value))}
+								min={new Date().toISOString().slice(0, 10)}
+								class="px-3 py-1.5 rounded-lg border border-app-border bg-app-hover text-sm text-app-text focus:outline-none focus:border-app-accent/60 transition-colors [color-scheme:dark]"
+							/>
+							{#if expiryBadge}
+								<span class="text-xs {expiryBadge.urgency === 'critical' ? 'text-red-400' : expiryBadge.urgency === 'warn' ? 'text-amber-400' : 'text-app-muted'}">{expiryBadge.label}</span>
+							{/if}
+						</div>
+					{:else if expiryMode === 'count'}
+						<div class="flex items-center gap-2 flex-wrap">
+							<input
+								type="number"
+								value={editMaxForwards ?? ''}
+								oninput={(e) => { const v = parseInt(e.currentTarget.value, 10); editMaxForwards = isNaN(v) || v < 1 ? null : v; }}
+								min="1"
+								placeholder="e.g. 10"
+								class="w-24 px-3 py-1.5 rounded-lg border border-app-border bg-app-hover text-sm text-app-text placeholder:text-app-muted/60 focus:outline-none focus:border-app-accent/60 transition-colors"
+							/>
+							<span class="text-xs text-app-muted">emails, then disable</span>
+							{#if expiryBadge}
+								<span class="text-xs {expiryBadge.urgency === 'critical' ? 'text-red-400' : expiryBadge.urgency === 'warn' ? 'text-amber-400' : 'text-app-muted'}">{expiryBadge.label}</span>
+							{/if}
+						</div>
+					{/if}
 				</div>
 
 				<!-- Stats -->

@@ -30,4 +30,6 @@ export interface AliasConfig {
 	autoCreated: boolean;
 	note?: string;
 	tags?: string[];
+	expiresAt?: number;    // Unix ms — worker rejects after this timestamp
+	maxForwards?: number;  // worker auto-disables when forwardedCount >= this
 }
