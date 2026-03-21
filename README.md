@@ -10,6 +10,7 @@
 </p>
 
 <p align="center">
+  <a href="#screenshots"><strong>Screenshots</strong></a> ·
   <a href="#features"><strong>Features</strong></a> ·
   <a href="#how-it-works"><strong>How it works</strong></a> ·
   <a href="#setup"><strong>Setup</strong></a> ·
@@ -23,6 +24,24 @@
 MailPal lets you create unique email aliases for every service you sign up to — so your real address is never exposed. When an alias gets spammy, disable it in one click. Every alias forwards to your real inbox, invisibly.
 
 Unlike other alias services, **MailPal runs entirely inside your own Cloudflare account**. Your emails never touch a third-party server. Zero subscriptions, zero data sharing — just your Workers, your KV, and your rules.
+
+## Screenshots
+
+**Main dashboard** — stats bar, quick-create form, full alias list across all domains with tags, notes, and per-alias forwarded/blocked counts:
+
+![Main dashboard](static/screenshots/dashboard.png)
+
+**Alias detail** — expand any alias to edit its target address, note, tags, and expiry settings, or view its activity log:
+
+![Alias detail panel](static/screenshots/alias-expanded.png)
+
+**Domain filtering** — click a domain in the sidebar to scope the list; color-coded dots keep multi-domain setups easy to navigate:
+
+![Domain-filtered view](static/screenshots/domain-filter.png)
+
+**Tag filtering** — create named color tags and filter aliases by one or more tags to find what you need instantly:
+
+![Tag filter dropdown](static/screenshots/tag-filter.png)
 
 ## Features
 
