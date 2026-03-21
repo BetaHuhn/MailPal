@@ -10,6 +10,7 @@
 	import CreateDomainDialog from '$lib/components/CreateDomainDialog.svelte';
 	import EditDomainDialog from '$lib/components/EditDomainDialog.svelte';
 	import SettingsDialog from '$lib/components/SettingsDialog.svelte';
+	import StatsBar from '$lib/components/StatsBar.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -421,6 +422,8 @@
 
 	<main id="main-content" class="flex-1 overflow-y-scroll" aria-label="Aliases">
 		<div class="max-w-4xl mx-auto px-8 py-8 space-y-8">
+
+			<StatsBar {aliases} />
 
 			<QuickCreateForm
 				{domains}
