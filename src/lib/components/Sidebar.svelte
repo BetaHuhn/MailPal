@@ -64,7 +64,7 @@
 				value={search}
 				oninput={(e) => onSearchChange(e.currentTarget.value)}
 				type="search"
-				placeholder="Quick search"
+				placeholder="Search"
 				aria-label="Search aliases"
 				class="flex-1 bg-transparent text-sm text-app-text placeholder:text-app-muted outline-none min-w-0"
 			/>
@@ -177,7 +177,7 @@
 	</nav>
 
 	<!-- Bottom actions -->
-	<div class="px-2 py-3 border-t border-app-border flex items-center justify-between gap-1">
+	<div class="p-2 border-t border-app-border flex items-center justify-between gap-1">
 		<!-- Activity -->
 		<a
 			href="/activity"

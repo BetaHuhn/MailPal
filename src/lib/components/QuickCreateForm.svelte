@@ -109,7 +109,7 @@
 						id="new-local-part"
 						bind:value={newLocalPart}
 						type="text"
-						placeholder="new address"
+						placeholder="New address"
 						autocomplete="off"
 						autocapitalize="none"
 						class="flex-1 px-3 py-2.5 bg-transparent text-sm text-app-text placeholder:text-app-muted outline-none min-w-0"

@@ -11,6 +11,7 @@
 	import AliasListToolbar from '$lib/components/AliasListToolbar.svelte';
 	import BulkActionBar from '$lib/components/BulkActionBar.svelte';
 	import KeyboardShortcutsDialog from '$lib/components/KeyboardShortcutsDialog.svelte';
+	import OnboardingFlow from '$lib/components/OnboardingFlow.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -375,6 +376,8 @@
 </svelte:head>
 
 <svelte:window onkeydown={handleKeydown} />
+
+<OnboardingFlow onboarded={data.onboarded} />
 
 <div class="flex h-screen overflow-hidden bg-app-bg text-app-text">
 	<Sidebar
