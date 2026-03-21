@@ -774,9 +774,9 @@
 				{:else}
 					<ol class="space-y-1" aria-label="Recent activity">
 						{#each activityLog as entry, i (i)}
-							<li class="flex items-start gap-2.5 py-2 {i !== activityLog.length - 1 ? 'border-b border-app-border/40' : ''}">
+							<li class="flex items-start gap-1.5 py-2 {i !== activityLog.length - 1 ? 'border-b border-app-border/40' : ''}">
 								<span
-									class="mt-1 w-1.5 h-1.5 rounded-full shrink-0 {entry.action === 'forwarded' ? 'bg-green-400' : 'bg-red-400'}"
+									class="mt-[0.3rem] w-1.5 h-1.5 rounded-full shrink-0 {entry.action === 'forwarded' ? 'bg-green-400' : 'bg-red-400'}"
 									aria-label={entry.action}
 								></span>
 								<div class="flex-1 min-w-0">
@@ -798,7 +798,7 @@
 							</li>
 						{/each}
 					</ol>
-					<p class="text-[11px] text-app-muted/40 text-center mt-3">Last {activityLog.length} event{activityLog.length === 1 ? '' : 's'}</p>
+					<!-- <p class="text-[11px] text-app-muted/40 text-center mt-3">Last {activityLog.length} event{activityLog.length === 1 ? '' : 's'}</p> -->
 				{/if}
 			</div>
 			{/if}

@@ -44,7 +44,7 @@
 				</svg>
 			</a>
 			<div>
-				<h1 class="text-xl font-bold">Activity</h1>
+				<h1 class="text-lg font-bold">Activity</h1>
 				<p class="text-sm text-app-muted">Recent email events across all aliases</p>
 			</div>
 		</div>
@@ -85,12 +85,12 @@
 				<p class="text-xs text-app-muted/60 mt-1">Events appear here after emails are received.</p>
 			</div>
 		{:else}
-			<ol class="space-y-1" aria-label="Activity log">
+			<ol class="space-y-2" aria-label="Activity log">
 				{#each entries as entry (`${entry.domain}/${entry.localPart}/${entry.at}`)}
 					<li class="flex items-start gap-3 px-4 py-3 rounded-xl border border-app-border bg-app-surface hover:border-app-hover transition-colors">
 						<!-- Action dot -->
 						<span
-							class="mt-0.5 w-2 h-2 rounded-full shrink-0 {entry.action === 'forwarded' ? 'bg-green-400' : 'bg-red-400'}"
+							class="mt-[0.4rem] w-2 h-2 rounded-full shrink-0 {entry.action === 'forwarded' ? 'bg-green-400' : 'bg-red-400'}"
 							aria-label={entry.action}
 						></span>
 
