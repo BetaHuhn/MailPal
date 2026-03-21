@@ -7,11 +7,6 @@
 	import DestinationSelect from './DestinationSelect.svelte';
   import ColorPicker from './ColorPicker.svelte';
 
-	const SWATCHES = [
-		'#D86464', '#D89E64', '#D8D864', '#9ED864', '#64D864',
-		'#64D89E', '#64D8D8', '#649ED8', '#6464D8', '#9E64D8', '#D864D8', '#D8649E',
-	];
-
 	let {
 		alias,
 		tags,
@@ -698,12 +693,12 @@
 							disabled={deleting}
 							class="px-3 py-1.5 text-xs text-red-400/80 hover:text-red-400 border border-red-400/20 hover:border-red-400/50 rounded-lg transition-colors disabled:opacity-40"
 						>
-							{deleting ? 'Deleting…' : 'Delete alias'}
+							{deleting ? 'Deleting…' : 'Delete Address'}
 						</AlertDialog.Trigger>
 						<AlertDialog.Portal>
 							<AlertDialog.Overlay class="fixed inset-0 bg-black/65 backdrop-blur-sm z-40" />
 							<AlertDialog.Content class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 rounded-2xl border border-app-border bg-app-surface shadow-2xl w-full max-w-sm text-app-text p-6 focus:outline-none">
-								<AlertDialog.Title class="font-semibold text-app-text mb-1">Delete alias?</AlertDialog.Title>
+								<AlertDialog.Title class="font-semibold text-app-text mb-1">Delete Address?</AlertDialog.Title>
 								<AlertDialog.Description class="text-sm text-app-muted mb-5">
 									<span class="font-mono text-app-text">{fullAddress}</span> will be permanently deleted.
 								</AlertDialog.Description>

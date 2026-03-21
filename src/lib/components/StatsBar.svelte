@@ -16,7 +16,7 @@
 	}
 
 	const stats = $derived([
-		{ label: 'Total aliases', value: fmt(totalAliases), title: totalAliases.toString() },
+		{ label: 'Total', value: fmt(totalAliases), title: totalAliases.toString() },
 		{ label: 'Active', value: fmt(activeAliases), title: activeAliases.toString() },
 		{ label: 'Forwarded', value: fmt(totalForwarded), title: totalForwarded.toString() },
 		{ label: 'Blocked', value: fmt(totalBlocked), title: totalBlocked.toString() },
@@ -28,9 +28,9 @@
 	aria-label="Overview statistics"
 >
 	{#each stats as stat (stat.label)}
-		<div class="px-4 py-3 flex flex-col gap-0.5">
-			<dt class="text-[11px] text-app-muted uppercase tracking-wide leading-none">{stat.label}</dt>
+		<div class="px-4 py-3 flex items-center justify-start gap-2">
 			<dd class="text-lg font-bold text-app-text tabular-nums leading-tight" title={stat.title}>{stat.value}</dd>
+			<dt class="text-[11px] text-app-muted uppercase tracking-wide leading-none">{stat.label}</dt>
 		</div>
 	{/each}
 </dl>

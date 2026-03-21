@@ -37,7 +37,7 @@
 			<a
 				href="/"
 				class="p-1.5 rounded-lg text-app-muted hover:text-app-text hover:bg-app-hover transition-colors"
-				aria-label="Back to aliases"
+				aria-label="Back home"
 			>
 				<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -45,7 +45,7 @@
 			</a>
 			<div>
 				<h1 class="text-lg font-bold">Activity</h1>
-				<p class="text-sm text-app-muted">Recent email events across all aliases</p>
+				<p class="text-sm text-app-muted">Recent email events across all addresses</p>
 			</div>
 		</div>
 

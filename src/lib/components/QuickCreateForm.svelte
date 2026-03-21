@@ -25,7 +25,6 @@
 	});
 
 	let newLocalPart = $state('');
-	let newNote = $state('');
 	let newDomain = $state(defaultDomain);
 	let creating = $state(false);
 	let error = $state('');
@@ -67,7 +66,6 @@
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					localPart: newLocalPart.trim() || undefined,
-					note: newNote.trim() || undefined,
 					expiresAt: expiryMode === 'date' ? expiresAt : null,
 					maxForwards: expiryMode === 'count' ? maxForwards : null
 				})
@@ -76,7 +74,6 @@
 			if (res.ok) {
 				onCreated(body as AliasConfig);
 				newLocalPart = '';
-				newNote = '';
 				expiryMode = 'none';
 				expiresAt = null;
 				maxForwards = null;
@@ -112,7 +109,7 @@
 						id="new-local-part"
 						bind:value={newLocalPart}
 						type="text"
-						placeholder="new alias"
+						placeholder="new address"
 						autocomplete="off"
 						autocapitalize="none"
 						class="flex-1 px-3 py-2.5 bg-transparent text-sm text-app-text placeholder:text-app-muted outline-none min-w-0"
@@ -223,10 +220,10 @@
 
 						<Popover.Portal>
 							<Popover.Content
-								sideOffset={8}
+								sideOffset={22}
 								side="bottom"
-								align="start"
-								class="z-50 w-64 rounded-xl border border-app-border bg-app-surface shadow-xl p-4 space-y-3"
+								align="end"
+								class="z-50 w-80 rounded-xl border border-app-border bg-app-surface shadow-xl p-3 space-y-3"
 							>
 								<p class="text-xs font-semibold text-app-text">Auto-disable</p>
 
@@ -237,7 +234,7 @@
 										<button
 											type="button"
 											onclick={() => { expiryMode = mode; }}
-											class="flex-1 px-2 py-1 rounded-md text-xs transition-colors
+											class="flex-1 px-1 py-1 rounded-md text-xs transition-colors
 												{expiryMode === mode
 													? 'bg-app-accent text-app-bg font-medium'
 													: 'bg-app-hover text-app-muted hover:text-app-text border border-app-border'}"
@@ -288,14 +285,6 @@
 				</button>
 			</div>
 
-			<!-- Optional note -->
-			<!-- <input
-				type="text"
-				bind:value={newNote}
-				placeholder="Note (optional) — e.g. GitHub sign-up"
-				autocomplete="off"
-				class="w-full mt-2 px-3 py-2 rounded-lg border border-app-border bg-app-surface text-sm text-app-text placeholder:text-app-muted/60 focus:outline-none focus:border-app-accent/60 transition-colors"
-			/> -->
 
 			{#if error}
 				<p id={errorId} role="alert" class="mt-2 text-sm text-red-400">{error}</p>

@@ -1,9 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import type { AliasConfig, DestinationAddress, DomainConfig, Tag } from '$lib/types.js';
-	import { DropdownMenu } from 'bits-ui';
-	import { slide } from 'svelte/transition';
-	import { cubicOut } from 'svelte/easing';
 	import Sidebar from '$lib/components/Sidebar.svelte';
 	import QuickCreateForm from '$lib/components/QuickCreateForm.svelte';
 	import AliasListRow from '$lib/components/AliasListRow.svelte';
@@ -11,6 +8,9 @@
 	import EditDomainDialog from '$lib/components/EditDomainDialog.svelte';
 	import SettingsDialog from '$lib/components/SettingsDialog.svelte';
 	import StatsBar from '$lib/components/StatsBar.svelte';
+	import AliasListToolbar from '$lib/components/AliasListToolbar.svelte';
+	import BulkActionBar from '$lib/components/BulkActionBar.svelte';
+	import KeyboardShortcutsDialog from '$lib/components/KeyboardShortcutsDialog.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -101,16 +101,6 @@
 
 	const hasActiveFilters = $derived(statusFilter !== 'all' || selectedTags.length > 0);
 
-	function setSort(field: SortField) {
-		if (sortField === field) {
-			sortDir = sortDir === 'asc' ? 'desc' : 'asc';
-		} else {
-			sortField = field;
-			// Name sorts A→Z by default, activity/recency sorts highest first
-			sortDir = field === 'name' ? 'asc' : 'desc';
-		}
-	}
-
 	function clearFilters() {
 		statusFilter = 'all';
 		selectedTags = [];
@@ -183,22 +173,6 @@
 		tags = tags.map((t) => (t.name === tag.name ? tag : t));
 	}
 
-	// ─── Sort/filter config ───────────────────────────────────────────────────
-	const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
-		{ value: 'all', label: 'All' },
-		{ value: 'active', label: 'Active' },
-		{ value: 'disabled', label: 'Disabled' },
-		{ value: 'auto', label: 'Auto' },
-		{ value: 'unused', label: 'Unused' }
-	];
-
-	const SORT_OPTIONS: { field: SortField; label: string }[] = [
-		{ field: 'name', label: 'Name' },
-		{ field: 'created', label: 'Created' },
-		{ field: 'lastUsed', label: 'Last used' },
-		{ field: 'forwarded', label: 'Forwarded' }
-	];
-
 	// ─── Bulk selection ────────────────────────────────────────────────────────
 	let selectedKeys = $state<Set<string>>(new Set());
 	let forceSelectionMode = $state(false);
@@ -249,7 +223,6 @@
 			)
 		);
 		results.forEach((updated) => { if (updated) updateAlias(updated); });
-		// clearSelection();
 	}
 
 	async function bulkDelete() {
@@ -438,211 +411,26 @@
 				<!-- Heading + count -->
 				<div class="flex items-baseline gap-3 mb-4">
 					<h2 id="list-heading" class="text-xl font-bold text-app-text">
-						{selectedDomain ?? 'All addresses'}
+						{selectedDomain ?? 'All Addresses'}
 					</h2>
 					<span class="text-sm text-app-muted" aria-live="polite" aria-atomic="true">
 						{visibleAliases.length}{visibleAliases.length !== baseAliases.length ? ` of ${baseAliases.length}` : ''}
 					</span>
 				</div>
 
-				<!-- ── Filter + sort toolbar ─────────────────────────────────── -->
-				<div class="flex items-center justify-between gap-3 mb-4 flex-wrap">
-
-					<!-- Left: filter dropdowns -->
-					<div class="flex items-center gap-2">
-
-						<!-- Status dropdown -->
-						<DropdownMenu.Root>
-							<DropdownMenu.Trigger
-								class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition-colors outline-none
-									{statusFilter !== 'all'
-										? 'border-app-hover bg-app-hover text-app-text font-medium'
-										: 'border-app-border text-app-muted hover:border-app-hover hover:text-app-text'}
-									data-[state=open]:border-app-hover data-[state=open]:text-app-text"
-							>
-								{statusFilter !== 'all' ? STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label : 'Status'}
-								<svg class="w-3 h-3 shrink-0 transition-transform duration-150 data-[state=open]:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
-								</svg>
-							</DropdownMenu.Trigger>
-
-							<DropdownMenu.Portal>
-								<DropdownMenu.Content
-									sideOffset={6}
-									align="start"
-									class="z-50 min-w-[11rem] rounded-xl border border-app-border bg-app-surface shadow-xl overflow-hidden p-1"
-								>
-									<DropdownMenu.RadioGroup
-										value={statusFilter}
-										onValueChange={(v) => { if (v) statusFilter = v as StatusFilter; }}
-									>
-										{#each STATUS_OPTIONS as opt (opt.value)}
-											{@const active = statusFilter === opt.value}
-											<DropdownMenu.RadioItem
-												value={opt.value}
-												class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm cursor-pointer outline-none
-													data-[highlighted]:bg-app-hover data-[highlighted]:text-app-text transition-colors
-													{active ? 'text-app-text' : 'text-app-muted'}"
-											>
-												<span class="w-3.5 flex items-center justify-center shrink-0">
-													{#if active}
-														<svg class="w-3 h-3 text-app-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-															<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-														</svg>
-													{/if}
-												</span>
-												{opt.label}
-												<span class="ml-auto tabular-nums text-xs text-app-muted/60">{statusCounts[opt.value]}</span>
-											</DropdownMenu.RadioItem>
-										{/each}
-									</DropdownMenu.RadioGroup>
-								</DropdownMenu.Content>
-							</DropdownMenu.Portal>
-						</DropdownMenu.Root>
-
-						<!-- Tags dropdown (only when tags exist) -->
-						{#if tags.length > 0}
-							<DropdownMenu.Root>
-								<DropdownMenu.Trigger
-									class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs transition-colors outline-none
-										{selectedTags.length > 0
-											? 'border-app-hover bg-app-hover text-app-text font-medium'
-											: 'border-app-border text-app-muted hover:border-app-hover hover:text-app-text'}
-										data-[state=open]:border-app-hover data-[state=open]:text-app-text"
-								>
-									{#if selectedTags.length > 0}
-										Tags · {selectedTags.length}
-									{:else}
-										Tags
-									{/if}
-									<svg class="w-3 h-3 shrink-0 transition-transform duration-150 data-[state=open]:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
-									</svg>
-								</DropdownMenu.Trigger>
-
-								<DropdownMenu.Portal>
-									<DropdownMenu.Content
-										sideOffset={6}
-										align="start"
-										class="z-50 min-w-[11rem] rounded-xl border border-app-border bg-app-surface shadow-xl overflow-hidden p-1"
-									>
-										<DropdownMenu.CheckboxGroup bind:value={selectedTags}>
-											{#each tags as tag (tag.name)}
-												{@const active = selectedTags.includes(tag.name)}
-												<DropdownMenu.CheckboxItem
-													value={tag.name}
-													closeOnSelect={false}
-													class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm cursor-pointer outline-none
-														data-[highlighted]:bg-app-hover data-[highlighted]:text-app-text transition-colors
-														{active ? 'text-app-text' : 'text-app-muted'}"
-												>
-													<span class="w-3.5 flex items-center justify-center shrink-0">
-														{#if active}
-															<svg class="w-3 h-3 text-app-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-																<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-															</svg>
-														{/if}
-													</span>
-													<span class="w-2 h-2 rounded-full shrink-0" style="background-color: {tag.color}" aria-hidden="true"></span>
-													{tag.name}
-												</DropdownMenu.CheckboxItem>
-											{/each}
-										</DropdownMenu.CheckboxGroup>
-									</DropdownMenu.Content>
-								</DropdownMenu.Portal>
-							</DropdownMenu.Root>
-						{/if}
-
-						<!-- Clear filters -->
-						{#if hasActiveFilters}
-							<button
-								type="button"
-								onclick={clearFilters}
-								class="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs text-app-muted/60 hover:text-app-muted transition-colors"
-								aria-label="Clear all filters"
-							>
-								<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
-								</svg>
-								Clear
-							</button>
-						{/if}
-					</div>
-
-					<!-- Right: sort controls -->
-					<div class="flex items-center gap-0.5 ml-auto" role="group" aria-label="Sort aliases">
-						<span class="text-xs text-app-muted/50 mr-1.5 select-none">Sort</span>
-						{#each SORT_OPTIONS as opt (opt.field)}
-							{@const active = sortField === opt.field}
-							<button
-								type="button"
-								onclick={() => setSort(opt.field)}
-								aria-pressed={active}
-								class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-colors
-									{active
-										? 'text-app-text font-medium bg-app-hover'
-										: 'text-app-muted hover:text-app-text hover:bg-app-hover/50'}"
-							>
-								{opt.label}
-								{#if active}
-									<svg
-										class="w-3 h-3 shrink-0 transition-transform duration-150 {sortDir === 'asc' ? 'rotate-180' : ''}"
-										fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"
-									>
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
-									</svg>
-								{/if}
-							</button>
-						{/each}
-					</div>
-
-					<span class="w-px h-3.5 bg-app-border shrink-0 mr-2" aria-hidden="true"></span>
-
-					<div class="flex items-center gap-1" role="group" aria-label="Bulk actions">
-						<!-- Select-all (appears when any alias is selected) -->
-						{#if selectionMode}
-							<button
-								type="button"
-								onclick={toggleSelectAll}
-								class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs border {allVisibleSelected ? 'border-app-hover bg-app-hover text-app-text font-medium' : 'border-app-border text-app-muted hover:border-app-hover hover:text-app-text'} transition-colors"
-							>
-								{allVisibleSelected ? 'Deselect all' : `Select all`}
-							</button>
-						{/if}
-
-						<!-- Select mode toggle -->
-						<button
-							type="button"
-							onclick={() => { if (selectionMode) clearSelection(); else forceSelectionMode = true; }}
-							aria-pressed={selectionMode}
-							class="inline-flex items-center gap-1 px-2 py-1 rounded-lg border text-xs transition-colors
-								{selectionMode
-									? 'border-app-hover bg-app-hover text-app-text font-medium'
-									: 'border-app-border text-app-muted hover:border-app-hover hover:text-app-text'}"
-						>
-							{#if selectionMode}
-								<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
-								</svg>
-								Clear
-							{:else}
-								<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-								</svg>
-								Select
-							{/if}
-						</button>
-					</div>
-
-					<!-- Shortcuts hint -->
-					<button
-						type="button"
-						onclick={() => (showShortcutsHelp = true)}
-						aria-label="Show keyboard shortcuts"
-						class="hidden md:flex items-center justify-center w-6 h-6 rounded border border-app-border text-[12px] font-bold text-app-muted/50 hover:text-app-muted hover:border-app-hover transition-colors"
-						title="Keyboard shortcuts (?)"
-					>?</button>
-				</div>
+				<AliasListToolbar
+					bind:statusFilter
+					bind:selectedTags
+					bind:sortField
+					bind:sortDir
+					{tags}
+					{statusCounts}
+					{selectionMode}
+					{allVisibleSelected}
+					onToggleSelectAll={toggleSelectAll}
+					onToggleSelection={() => { if (selectionMode) clearSelection(); else forceSelectionMode = true; }}
+					onShowHelp={() => (showShortcutsHelp = true)}
+				/>
 
 				<!-- ── Alias list ─────────────────────────────────────────────── -->
 				{#if visibleAliases.length === 0}
@@ -700,116 +488,18 @@
 	</main>
 </div>
 
-<!-- ── Floating bulk action bar ─────────────────────────────────────────── -->
-{#if selectedKeys.size > 0}
-	<div
-		transition:slide={{ duration: 200, easing: cubicOut, axis: 'y' }}
-		class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 p-2 pl-3 rounded-2xl border border-app-border bg-app-surface shadow-2xl shadow-black/30"
-	>
-		<span class="text-xs font-medium text-app-muted pr-2 border-r border-app-border tabular-nums">
-			{selectedKeys.size} selected
-		</span>
-		<button
-			type="button"
-			onclick={() => bulkSetEnabled(true)}
-			class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium text-app-accent hover:bg-app-hover transition-colors"
-		>
-			<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-			</svg>
-			Enable
-			<kbd class="ml-0.5 px-1 py-0.5 rounded border border-app-border/60 bg-app-hover/60 text-[12px] font-mono text-app-muted/70">e</kbd>
-		</button>
-		<button
-			type="button"
-			onclick={() => bulkSetEnabled(false)}
-			class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium text-app-muted hover:bg-app-hover hover:text-app-text transition-colors"
-		>
-			<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-				<circle cx="12" cy="12" r="10" stroke-width="2" />
-				<path stroke-linecap="round" stroke-width="2" d="M4.93 4.93l14.14 14.14" />
-			</svg>
-			Disable
-			<kbd class="ml-0.5 px-1 py-0.5 rounded border border-app-border/60 bg-app-hover/60 text-[12px] font-mono text-app-muted/70">d</kbd>
-		</button>
-		<button
-			type="button"
-			onclick={bulkDelete}
-			class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium text-red-400 hover:bg-red-400/10 transition-colors"
-		>
-			<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-			</svg>
-			Delete
-			<kbd class="ml-0.5 px-1 py-0.5 rounded border border-red-400/30 bg-red-400/10 text-[12px] font-mono text-red-400/70">⌫</kbd>
-		</button>
-		<button
-			type="button"
-			onclick={clearSelection}
-			class="p-1.5 rounded-lg text-app-muted/60 hover:text-app-muted hover:bg-app-hover transition-colors"
-			aria-label="Clear selection"
-		>
-			<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
-			</svg>
-		</button>
-	</div>
-{/if}
+<BulkActionBar
+	selectedCount={selectedKeys.size}
+	onEnable={() => bulkSetEnabled(true)}
+	onDisable={() => bulkSetEnabled(false)}
+	onDelete={bulkDelete}
+	onClear={clearSelection}
+/>
 
-<!-- ── Shortcuts help overlay ─────────────────────────────────────────────── -->
-{#if showShortcutsHelp}
-	<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-	<div
-		class="fixed inset-0 bg-black/65 backdrop-blur-sm z-50 flex items-center justify-center"
-		onclick={() => (showShortcutsHelp = false)}
-	>
-		<div
-			class="rounded-2xl border border-app-border bg-app-surface shadow-2xl w-full max-w-sm p-6 text-app-text"
-			onclick={(e) => e.stopPropagation()}
-			role="dialog"
-			aria-modal="true"
-			aria-label="Keyboard shortcuts"
-		>
-			<div class="flex items-center justify-between mb-4">
-				<h2 class="font-semibold text-base">Keyboard shortcuts</h2>
-				<button
-					onclick={() => (showShortcutsHelp = false)}
-					class="p-1 rounded text-app-muted hover:text-app-text hover:bg-app-hover transition-colors"
-					aria-label="Close"
-				>
-					<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-					</svg>
-				</button>
-			</div>
-			<dl class="space-y-2.5">
-				{#each [
-					['/', 'Focus search'],
-					['c', 'Focus quick-create'],
-					['j / k', 'Navigate alias list'],
-					['s', 'Toggle expand focused alias'],
-					['e', 'Enable focused alias'],
-					['d', 'Disable focused alias'],
-					['t', 'Toggle enable / disable'],
-					['Backspace', 'Delete focused alias'],
-					['x', 'Toggle select focused'],
-					['Escape', 'Clear / close'],
-					['?', 'Show this help'],
-				] as [key, desc]}
-					<div class="flex items-center justify-between gap-4">
-						<dt class="text-sm text-app-muted">{desc}</dt>
-						<dd>
-							{#each key.split(' / ') as k}
-								<kbd class="inline-flex items-center px-1.5 py-0.5 rounded border border-app-border bg-app-hover text-xs font-mono text-app-text">{k}</kbd>
-								{#if k !== key.split(' / ').at(-1)}<span class="text-app-muted text-xs mx-0.5">/</span>{/if}
-							{/each}
-						</dd>
-					</div>
-				{/each}
-			</dl>
-		</div>
-	</div>
-{/if}
+<KeyboardShortcutsDialog
+	show={showShortcutsHelp}
+	onClose={() => (showShortcutsHelp = false)}
+/>
 
 <!-- ── Dialogs ────────────────────────────────────────────────────────────── -->
 <CreateDomainDialog

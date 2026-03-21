@@ -109,7 +109,7 @@
 	}
 
 	async function handleDeleteTag(name: string) {
-		const confirmDelete = confirm(`Are you sure you want to delete the tag "${name}"? This will remove it from all aliases.`);
+		const confirmDelete = confirm(`Are you sure you want to delete the tag "${name}"? This will remove it from all addresses.`);
 		if (!confirmDelete) return;
 
 		deletingTag = name;
@@ -266,7 +266,7 @@
 		<div>
 			<h3 class="text-sm font-semibold text-app-text mb-0.5">Tags</h3>
 			<p class="text-xs text-app-muted leading-relaxed">
-				Organize aliases with colored tags for filtering and grouping.
+				Organize addresses with colored tags for filtering and grouping.
 			</p>
 		</div>
 
