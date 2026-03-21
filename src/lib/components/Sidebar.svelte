@@ -49,19 +49,7 @@
 >
 	<!-- Brand -->
 	<div class="px-5 py-5 flex items-center gap-3">
-		<div
-			class="w-8 h-8 rounded-lg bg-app-accent/15 flex items-center justify-center shrink-0"
-			aria-hidden="true"
-		>
-			<svg class="w-4 h-4 text-app-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-				<path
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					stroke-width="2"
-					d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-				/>
-			</svg>
-		</div>
+		<img src="/favicon.svg" alt="" class="w-8 h-8 shrink-0" aria-hidden="true" />
 		<span class="text-base font-bold tracking-tight text-app-text">MailPal</span>
 	</div>
 
