@@ -1,8 +1,8 @@
 const COOKIE_NAME = 'mailpal_session';
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
+const enc = new TextEncoder();
 
 async function hmacSign(password: string, data: string): Promise<string> {
-	const enc = new TextEncoder();
 	const key = await crypto.subtle.importKey(
 		'raw',
 		enc.encode(password),
@@ -17,7 +17,6 @@ async function hmacSign(password: string, data: string): Promise<string> {
 async function hmacVerify(password: string, data: string, sig: string): Promise<boolean> {
 	const expected = await hmacSign(password, data);
 	// Constant-time comparison to prevent timing attacks
-	const enc = new TextEncoder();
 	const a = enc.encode(expected);
 	const b = enc.encode(sig);
 	if (a.length !== b.length) return false;
