@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { AliasConfig, DestinationAddress, DomainConfig } from '$lib/types.js';
+	import type { AliasConfig, DestinationAddress, DomainConfig, Tag } from '$lib/types.js';
 	import { AlertDialog } from 'bits-ui';
 	import Dialog from './Dialog.svelte';
 	import DestinationSelect from './DestinationSelect.svelte';
@@ -9,6 +9,7 @@
 		alias,
 		domain,
 		destinations,
+		tags,
 		onClose,
 		onUpdated,
 		onDeleted
@@ -17,12 +18,15 @@
 		alias: AliasConfig;
 		domain: DomainConfig;
 		destinations: DestinationAddress[];
+		tags: Tag[];
 		onClose: () => void;
 		onUpdated: (alias: AliasConfig) => void;
 		onDeleted: (alias: AliasConfig) => void;
 	} = $props();
 
 	let targetEmail = $state(alias.targetEmail ?? '');
+	let note = $state(alias.note ?? '');
+	let selectedTags = $state<string[]>(alias.tags ?? []);
 	let saving = $state(false);
 	let deleting = $state(false);
 	let error = $state('');
@@ -30,9 +34,19 @@
 	$effect(() => {
 		if (open) {
 			targetEmail = alias.targetEmail ?? '';
+			note = alias.note ?? '';
+			selectedTags = alias.tags ?? [];
 			error = '';
 		}
 	});
+
+	function toggleTag(name: string) {
+		if (selectedTags.includes(name)) {
+			selectedTags = selectedTags.filter((t) => t !== name);
+		} else {
+			selectedTags = [...selectedTags, name];
+		}
+	}
 
 	async function submit(e: Event) {
 		e.preventDefault();
@@ -42,7 +56,11 @@
 			const res = await fetch(`/api/domains/${alias.domain}/aliases/${alias.localPart}`, {
 				method: 'PATCH',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ targetEmail: targetEmail || null })
+				body: JSON.stringify({
+					targetEmail: targetEmail || null,
+					note: note.trim() || null,
+					tags: selectedTags
+				})
 			});
 			const body = await res.json();
 			if (!res.ok) {
@@ -88,6 +106,49 @@
 			/>
 			<p class="text-xs text-app-muted mt-1.5">Clear to forward to the domain default</p>
 		</div>
+
+		<!-- Note -->
+		<div>
+			<label for="ea-note" class="block text-sm font-medium text-app-text mb-1.5">
+				Note
+				<span class="text-app-muted font-normal">(optional)</span>
+			</label>
+			<input
+				id="ea-note"
+				type="text"
+				bind:value={note}
+				placeholder="e.g. GitHub sign-up"
+				class="w-full px-3 py-2 rounded-lg border border-app-border bg-app-hover text-sm text-app-text placeholder:text-app-muted focus:outline-none focus:border-app-accent/60 transition-colors"
+			/>
+		</div>
+
+		<!-- Tags -->
+		{#if tags.length > 0}
+			<div>
+				<span class="block text-sm font-medium text-app-text mb-1.5">Tags</span>
+				<div class="flex flex-wrap gap-1.5">
+					{#each tags as tag (tag.name)}
+						{@const active = selectedTags.includes(tag.name)}
+						<button
+							type="button"
+							onclick={() => toggleTag(tag.name)}
+							aria-pressed={active}
+							class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-all"
+							style={active
+								? `color: ${tag.color}; background-color: ${tag.color}26; border: 1px solid ${tag.color}66`
+								: 'color: var(--color-app-muted); background-color: var(--color-app-hover); border: 1px solid var(--color-app-border)'}
+						>
+							<span
+								class="w-1.5 h-1.5 rounded-full shrink-0"
+								style="background-color: {active ? tag.color : 'currentColor'}"
+								aria-hidden="true"
+							></span>
+							{tag.name}
+						</button>
+					{/each}
+				</div>
+			</div>
+		{/if}
 
 		<!-- Stats -->
 		<div class="grid grid-cols-3 gap-2" aria-label="Alias statistics">

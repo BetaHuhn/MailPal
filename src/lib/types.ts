@@ -12,6 +12,12 @@ export interface DestinationAddress {
 	createdAt: number;
 }
 
+export interface Tag {
+	name: string;
+	color: string; // hex, e.g. "#3b82f6"
+	createdAt: number;
+}
+
 export interface AliasConfig {
 	localPart: string;
 	domain: string;
@@ -22,4 +28,6 @@ export interface AliasConfig {
 	blockedCount: number;
 	lastUsedAt: number | null;
 	autoCreated: boolean;
+	note?: string;
+	tags?: string[];
 }

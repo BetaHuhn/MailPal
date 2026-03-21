@@ -3,6 +3,8 @@
 	import { Switch } from 'bits-ui';
 	import Dialog from './Dialog.svelte';
 	import DestinationSelect from './DestinationSelect.svelte';
+  import ColorPicker from './ColorPicker.svelte';
+  import { randomSwatchColor } from '$lib/constants';
 
 	let {
 		open,
@@ -19,6 +21,7 @@
 	let domain = $state('');
 	let targetEmail = $state('');
 	let wildcardEnabled = $state(false);
+	let color = $state<string | undefined>(randomSwatchColor());
 	let saving = $state(false);
 	let error = $state('');
 	let createdDomain = $state<DomainConfig | null>(null);
@@ -34,6 +37,7 @@
 		domain = '';
 		targetEmail = destinations[0]?.email ?? '';
 		wildcardEnabled = false;
+		color = randomSwatchColor();
 		error = '';
 		createdDomain = null;
 	}
@@ -46,7 +50,7 @@
 			const res = await fetch('/api/domains', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ domain, targetEmail, wildcardEnabled })
+				body: JSON.stringify({ domain, targetEmail, wildcardEnabled, color })
 			});
 			const body = await res.json();
 			if (!res.ok) {
@@ -125,6 +129,15 @@
 	{:else}
 		<!-- ── Creation form ──────────────────────────────────────────────── -->
 		<form onsubmit={submit} class="p-6 space-y-4">
+			<div>
+				<div class="flex items-center justify-between mb-1.5">
+					<label for="ed-target" class="text-sm font-medium text-app-text">
+						Domain color
+					</label>
+				</div>
+				<ColorPicker bind:value={color} open={true} size={6} />
+			</div>
+
 			<div>
 				<label for="cd-domain" class="block text-sm font-medium text-app-text mb-1.5">Domain</label>
 				<input

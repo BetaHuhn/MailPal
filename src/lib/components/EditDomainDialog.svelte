@@ -78,9 +78,17 @@
 		<div>
 			<div class="flex items-center justify-between mb-1.5">
 				<label for="ed-target" class="text-sm font-medium text-app-text">
+					Domain color
+				</label>
+			</div>
+			<ColorPicker bind:value={color} size={6} />
+		</div>
+
+		<div>
+			<div class="flex items-center justify-between mb-1.5">
+				<label for="ed-target" class="text-sm font-medium text-app-text">
 					Default target email
 				</label>
-				<ColorPicker bind:value={color} />
 			</div>
 			<DestinationSelect
 				id="ed-target"

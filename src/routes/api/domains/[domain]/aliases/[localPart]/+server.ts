@@ -13,12 +13,14 @@ export const PATCH: RequestHandler = async ({ params, request, locals }) => {
 	if (!alias) return json({ error: 'Not found' }, { status: 404 });
 
 	const body = await request.json();
-	const { enabled, targetEmail } = body;
+	const { enabled, targetEmail, note, tags } = body;
 
 	const updated = {
 		...alias,
 		...(enabled !== undefined && { enabled }),
-		...(targetEmail !== undefined && { targetEmail: targetEmail === '' ? null : targetEmail })
+		...(targetEmail !== undefined && { targetEmail: targetEmail === '' ? null : targetEmail }),
+		...(note !== undefined && { note: note || undefined }),
+		...(tags !== undefined && { tags })
 	};
 
 	await putAlias(locals.kv, updated);

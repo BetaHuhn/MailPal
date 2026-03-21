@@ -1,5 +1,5 @@
 import type { KVNamespace } from '@cloudflare/workers-types';
-import type { AliasConfig, DestinationAddress, DomainConfig } from './types.js';
+import type { AliasConfig, DestinationAddress, DomainConfig, Tag } from './types.js';
 
 // ─── Domain helpers ───────────────────────────────────────────────────────────
 
@@ -87,4 +87,25 @@ export async function putDestination(kv: KVNamespace, dest: DestinationAddress):
 
 export async function deleteDestination(kv: KVNamespace, email: string): Promise<void> {
 	await kv.delete(`destination:${email}`);
+}
+
+// ─── Tag helpers ──────────────────────────────────────────────────────────────
+
+export async function listTags(kv: KVNamespace): Promise<Tag[]> {
+	const list = await kv.list({ prefix: 'tag:' });
+	const configs = await Promise.all(
+		list.keys.map(async (k) => {
+			const val = await kv.get(k.name);
+			return val ? (JSON.parse(val) as Tag) : null;
+		})
+	);
+	return configs.filter((c): c is Tag => c !== null);
+}
+
+export async function putTag(kv: KVNamespace, tag: Tag): Promise<void> {
+	await kv.put(`tag:${tag.name}`, JSON.stringify(tag));
+}
+
+export async function deleteTag(kv: KVNamespace, name: string): Promise<void> {
+	await kv.delete(`tag:${name}`);
 }
