@@ -36,6 +36,9 @@
 			return;
 		}
 
+		// 3. Show onboarding
+		show = true;
+
 		requestAnimationFrame(() => { stepVisible = true; });
 
 		const onKey = (e: KeyboardEvent) => {
