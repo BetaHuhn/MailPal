@@ -18,6 +18,13 @@ export interface Tag {
 	createdAt: number;
 }
 
+export interface LogEntry {
+	at: number;             // Unix ms
+	action: 'forwarded' | 'blocked';
+	from: string;           // sender address
+	to: string;             // destination / would-be destination
+}
+
 export interface AliasConfig {
 	localPart: string;
 	domain: string;

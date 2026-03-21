@@ -5,6 +5,30 @@ interface Env {
 	KV: KVNamespace;
 }
 
+interface LogEntry {
+	at: number;
+	action: 'forwarded' | 'blocked';
+	from: string;
+	to: string;
+}
+
+async function appendLog(
+	kv: KVNamespace,
+	domain: string,
+	localPart: string,
+	entry: LogEntry
+): Promise<void> {
+	const key = `log:${domain}/${localPart}`;
+	let log: LogEntry[] = [];
+	try {
+		const existing = await kv.get(key);
+		if (existing) log = JSON.parse(existing);
+	} catch { /* ignore malformed */ }
+	log.unshift(entry);
+	if (log.length > 50) log.length = 50;
+	await kv.put(key, JSON.stringify(log));
+}
+
 export default {
 	async email(message: EmailMessage, env: Env, ctx: ExecutionContext): Promise<void> {
 		const to = message.to;
@@ -60,38 +84,47 @@ export default {
 
 		// 5. Alias disabled
 		if (!aliasConfig.enabled) {
+			const now = Date.now();
+			const wouldBeTarget = aliasConfig.targetEmail ?? domainConfig.targetEmail;
 			const updated: AliasConfig = {
 				...aliasConfig,
 				blockedCount: aliasConfig.blockedCount + 1,
-				lastUsedAt: Date.now()
+				lastUsedAt: now
 			};
 			ctx.waitUntil(env.KV.put(aliasKey, JSON.stringify(updated)));
+			ctx.waitUntil(appendLog(env.KV, domain, localPart, { at: now, action: 'blocked', from: message.from, to: wouldBeTarget }));
 			message.setReject('Alias disabled');
 			return;
 		}
 
 		// 5a. Date expiry
 		if (aliasConfig.expiresAt && Date.now() > aliasConfig.expiresAt) {
+			const now = Date.now();
+			const wouldBeTarget = aliasConfig.targetEmail ?? domainConfig.targetEmail;
 			const updated: AliasConfig = {
 				...aliasConfig,
 				enabled: false,
 				blockedCount: aliasConfig.blockedCount + 1,
-				lastUsedAt: Date.now()
+				lastUsedAt: now
 			};
 			ctx.waitUntil(env.KV.put(aliasKey, JSON.stringify(updated)));
+			ctx.waitUntil(appendLog(env.KV, domain, localPart, { at: now, action: 'blocked', from: message.from, to: wouldBeTarget }));
 			message.setReject('Alias expired');
 			return;
 		}
 
 		// 5b. Forward count limit
 		if (aliasConfig.maxForwards != null && aliasConfig.forwardedCount >= aliasConfig.maxForwards) {
+			const now = Date.now();
+			const wouldBeTarget = aliasConfig.targetEmail ?? domainConfig.targetEmail;
 			const updated: AliasConfig = {
 				...aliasConfig,
 				enabled: false,
 				blockedCount: aliasConfig.blockedCount + 1,
-				lastUsedAt: Date.now()
+				lastUsedAt: now
 			};
 			ctx.waitUntil(env.KV.put(aliasKey, JSON.stringify(updated)));
+			ctx.waitUntil(appendLog(env.KV, domain, localPart, { at: now, action: 'blocked', from: message.from, to: wouldBeTarget }));
 			message.setReject('Forward limit reached');
 			return;
 		}
@@ -100,12 +133,14 @@ export default {
 		const target = aliasConfig.targetEmail ?? domainConfig.targetEmail;
 		await message.forward(target);
 
-		// 7. Update stats async
+		// 7. Update stats + log async
+		const now = Date.now();
 		const updated: AliasConfig = {
 			...aliasConfig,
 			forwardedCount: aliasConfig.forwardedCount + 1,
-			lastUsedAt: Date.now()
+			lastUsedAt: now
 		};
 		ctx.waitUntil(env.KV.put(aliasKey, JSON.stringify(updated)));
+		ctx.waitUntil(appendLog(env.KV, domain, localPart, { at: now, action: 'forwarded', from: message.from, to: target }));
 	}
 } satisfies ExportedHandler<Env>;

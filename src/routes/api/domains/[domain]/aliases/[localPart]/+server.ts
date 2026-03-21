@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { deleteAlias, getAlias, putAlias } from '$lib/kv.js';
+import { deleteAlias, deleteLog, getAlias, putAlias } from '$lib/kv.js';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const alias = await getAlias(locals.kv, params.domain, params.localPart);
@@ -31,6 +31,9 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
 	const alias = await getAlias(locals.kv, params.domain, params.localPart);
 	if (!alias) return json({ error: 'Not found' }, { status: 404 });
 
-	await deleteAlias(locals.kv, params.domain, params.localPart);
+	await Promise.all([
+		deleteAlias(locals.kv, params.domain, params.localPart),
+		deleteLog(locals.kv, params.domain, params.localPart)
+	]);
 	return new Response(null, { status: 204 });
 };

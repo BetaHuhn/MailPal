@@ -189,7 +189,23 @@
 	</nav>
 
 	<!-- Bottom actions -->
-	<div class="px-2 py-3 border-t border-app-border flex items-center gap-1">
+	<div class="px-2 py-3 border-t border-app-border flex items-center justify-between gap-1">
+		<!-- Activity -->
+		<a
+			href="/activity"
+			aria-label="Activity log"
+			title="Activity log"
+			class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-app-muted hover:text-app-text hover:bg-app-hover/60 transition-colors"
+		>
+			<svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+			</svg>
+			Activity
+		</a>
+
+		<!-- Divider -->
+		<div class="w-px h-6 bg-app-border/50"></div>
+
 		<!-- Settings -->
 		<button
 			onclick={onOpenSettings}

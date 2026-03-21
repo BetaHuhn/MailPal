@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { AliasConfig, DestinationAddress, DomainConfig, Tag } from '$lib/types.js';
+	import type { AliasConfig, DestinationAddress, DomainConfig, LogEntry, Tag } from '$lib/types.js';
 	import { AlertDialog, Tooltip } from 'bits-ui';
 	import { slide } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
@@ -206,6 +206,55 @@
 		} finally {
 			deleting = false;
 		}
+	}
+
+	// ── Activity tab ────────────────────────────────────────────────────────
+	let activeTab = $state<'settings' | 'activity'>('settings');
+	let activityLog = $state<LogEntry[]>([]);
+	let logLoading = $state(false);
+	let logError = $state('');
+	let logLoaded = $state(false);
+
+	async function loadLog() {
+		if (logLoading) return;
+		logLoading = true;
+		logError = '';
+		try {
+			const res = await fetch(`/api/domains/${alias.domain}/aliases/${alias.localPart}/log`);
+			const data = await res.json();
+			if (res.ok) { activityLog = data; logLoaded = true; }
+			else logError = data.error ?? 'Failed to load';
+		} catch {
+			logError = 'Network error';
+		} finally {
+			logLoading = false;
+		}
+	}
+
+	function switchTab(tab: 'settings' | 'activity') {
+		activeTab = tab;
+		if (tab === 'activity' && !logLoaded) loadLog();
+	}
+
+	// Reset tab when collapsing
+	$effect(() => {
+		if (!expanded) {
+			activeTab = 'settings';
+			logLoaded = false;
+			activityLog = [];
+		}
+	});
+
+	function relativeTime(at: number): string {
+		const diff = Date.now() - at;
+		const mins = Math.floor(diff / 60_000);
+		if (mins < 1) return 'just now';
+		if (mins < 60) return `${mins}m ago`;
+		const hrs = Math.floor(mins / 60);
+		if (hrs < 24) return `${hrs}h ago`;
+		const days = Math.floor(hrs / 24);
+		if (days < 30) return `${days}d ago`;
+		return new Date(at).toLocaleDateString();
 	}
 
 	async function handleCreateTag(e: Event) {
@@ -444,7 +493,24 @@
 			transition:slide={{ duration: 220, easing: cubicOut }}
 			class="overflow-hidden"
 		>
-			<div class="px-4 pb-5 space-y-5 border-t border-app-border/50">
+			<!-- Tab bar -->
+			<div class="flex border-t border-app-border/50">
+				{#each (['settings', 'activity'] as const) as tab}
+					<button
+						type="button"
+						onclick={() => switchTab(tab)}
+						class="px-4 py-2.5 text-xs font-medium capitalize transition-colors border-b-2
+							{activeTab === tab
+								? 'border-app-accent text-app-accent'
+								: 'border-transparent text-app-muted hover:text-app-text'}"
+					>
+						{tab === 'settings' ? 'Settings' : 'Activity'}
+					</button>
+				{/each}
+			</div>
+
+			{#if activeTab === 'settings'}
+			<div class="px-4 pb-5 space-y-5">
 				<div class="pt-4 space-y-3">
 
 					<!-- Destination override -->
@@ -687,6 +753,55 @@
 					</div>
 				</div>
 			</div>
+			{:else}
+			<!-- ── Activity tab ──────────────────────────────────────────────── -->
+			<div class="px-4 py-4">
+				{#if logLoading}
+					<div class="flex items-center justify-center py-10 text-app-muted">
+						<svg class="w-4 h-4 animate-spin mr-2" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+						</svg>
+						<span class="text-xs">Loading…</span>
+					</div>
+				{:else if logError}
+					<p class="text-xs text-red-400 text-center py-6">{logError}</p>
+				{:else if activityLog.length === 0}
+					<div class="text-center py-10">
+						<p class="text-xs text-app-muted">No activity recorded yet.</p>
+						<p class="text-xs text-app-muted/50 mt-1">Events appear after emails are received.</p>
+					</div>
+				{:else}
+					<ol class="space-y-1" aria-label="Recent activity">
+						{#each activityLog as entry, i (i)}
+							<li class="flex items-start gap-2.5 py-2 {i !== activityLog.length - 1 ? 'border-b border-app-border/40' : ''}">
+								<span
+									class="mt-1 w-1.5 h-1.5 rounded-full shrink-0 {entry.action === 'forwarded' ? 'bg-green-400' : 'bg-red-400'}"
+									aria-label={entry.action}
+								></span>
+								<div class="flex-1 min-w-0">
+									<div class="flex items-center gap-2">
+										<span class="text-xs font-medium {entry.action === 'forwarded' ? 'text-green-400' : 'text-red-400'}">
+											{entry.action}
+										</span>
+										<span class="text-xs text-app-muted truncate" title={entry.from}>from {entry.from}</span>
+									</div>
+									<p class="text-xs text-app-muted/60 truncate" title={entry.to}>→ {entry.to}</p>
+								</div>
+								<time
+									datetime={new Date(entry.at).toISOString()}
+									title={new Date(entry.at).toLocaleString()}
+									class="text-[11px] text-app-muted/50 shrink-0 tabular-nums"
+								>
+									{relativeTime(entry.at)}
+								</time>
+							</li>
+						{/each}
+					</ol>
+					<p class="text-[11px] text-app-muted/40 text-center mt-3">Last {activityLog.length} event{activityLog.length === 1 ? '' : 's'}</p>
+				{/if}
+			</div>
+			{/if}
 		</div>
 	{/if}
 </div>

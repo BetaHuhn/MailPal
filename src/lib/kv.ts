@@ -1,5 +1,5 @@
 import type { KVNamespace } from '@cloudflare/workers-types';
-import type { AliasConfig, DestinationAddress, DomainConfig, Tag } from './types.js';
+import type { AliasConfig, DestinationAddress, DomainConfig, LogEntry, Tag } from './types.js';
 
 // ─── Domain helpers ───────────────────────────────────────────────────────────
 
@@ -87,6 +87,21 @@ export async function putDestination(kv: KVNamespace, dest: DestinationAddress):
 
 export async function deleteDestination(kv: KVNamespace, email: string): Promise<void> {
 	await kv.delete(`destination:${email}`);
+}
+
+// ─── Activity log helpers ─────────────────────────────────────────────────────
+
+export async function getLog(
+	kv: KVNamespace,
+	domain: string,
+	localPart: string
+): Promise<LogEntry[]> {
+	const val = await kv.get(`log:${domain}/${localPart}`);
+	return val ? (JSON.parse(val) as LogEntry[]) : [];
+}
+
+export async function deleteLog(kv: KVNamespace, domain: string, localPart: string): Promise<void> {
+	await kv.delete(`log:${domain}/${localPart}`);
 }
 
 // ─── Tag helpers ──────────────────────────────────────────────────────────────
