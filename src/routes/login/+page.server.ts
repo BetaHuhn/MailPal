@@ -33,6 +33,7 @@ export const actions: Actions = {
 		cookies.set('mailpal_session', decodeURIComponent(value), {
 			path: '/',
 			httpOnly: true,
+			secure: true,
 			sameSite: 'lax',
 			maxAge
 		});

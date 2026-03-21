@@ -16,14 +16,23 @@ async function hmacSign(password: string, data: string): Promise<string> {
 
 async function hmacVerify(password: string, data: string, sig: string): Promise<boolean> {
 	const expected = await hmacSign(password, data);
-	return expected === sig;
+	// Constant-time comparison to prevent timing attacks
+	const enc = new TextEncoder();
+	const a = enc.encode(expected);
+	const b = enc.encode(sig);
+	if (a.length !== b.length) return false;
+	let diff = 0;
+	for (let i = 0; i < a.length; i++) {
+		diff |= a[i] ^ b[i];
+	}
+	return diff === 0;
 }
 
 export async function createSessionCookie(password: string): Promise<string> {
 	const payload = `session:${Date.now()}`;
 	const sig = await hmacSign(password, payload);
 	const value = encodeURIComponent(`${payload}:${sig}`);
-	return `${COOKIE_NAME}=${value}; HttpOnly; SameSite=Lax; Max-Age=${COOKIE_MAX_AGE}; Path=/`;
+	return `${COOKIE_NAME}=${value}; HttpOnly; Secure; SameSite=Lax; Max-Age=${COOKIE_MAX_AGE}; Path=/`;
 }
 
 export async function verifySessionCookie(
@@ -50,5 +59,5 @@ export async function verifySessionCookie(
 }
 
 export function clearSessionCookie(): string {
-	return `${COOKIE_NAME}=; HttpOnly; SameSite=Lax; Max-Age=0; Path=/`;
+	return `${COOKIE_NAME}=; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Path=/`;
 }
