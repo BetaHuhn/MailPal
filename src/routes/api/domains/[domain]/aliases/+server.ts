@@ -32,6 +32,9 @@ export const POST: RequestHandler = async ({ params, request, locals }) => {
 		if (!/^[a-zA-Z0-9._+-]+$/.test(localPart)) {
 			return json({ error: 'Invalid localPart' }, { status: 400 });
 		}
+		if (localPart.length > 64) {
+			return json({ error: 'Local part must be 64 characters or fewer' }, { status: 400 });
+		}
 		const existing = await getAlias(locals.kv, params.domain, localPart);
 		if (existing) return json({ error: 'Alias already exists' }, { status: 409 });
 	}

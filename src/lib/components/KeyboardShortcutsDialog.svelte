@@ -28,6 +28,7 @@
 			role="dialog"
 			aria-modal="true"
 			aria-label="Keyboard shortcuts"
+			tabindex="-1"
 		>
 			<div class="flex items-center justify-between mb-4">
 				<h2 class="font-semibold text-base">Keyboard shortcuts</h2>

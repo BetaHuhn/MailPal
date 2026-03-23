@@ -193,18 +193,21 @@
 					<!-- Expiry popover -->
 					<Popover.Root>
 						<Tooltip.Root delayDuration={300}>
-							<Tooltip.Trigger asChild>
-								<Popover.Trigger
-									type="button"
-									aria-label="Set expiry"
-									class="px-3 border-l border-app-border transition-colors
-										{hasExpiry ? 'text-app-accent' : 'text-app-muted hover:text-app-accent'}"
-								>
-									<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-										<circle cx="12" cy="12" r="9" stroke-width="2" />
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7v5l3 3" />
-									</svg>
-								</Popover.Trigger>
+							<Tooltip.Trigger>
+								{#snippet child({ props })}
+									<Popover.Trigger
+										{...props}
+										type="button"
+										aria-label="Set expiry"
+										class="px-3 border-l border-app-border transition-colors
+											{hasExpiry ? 'text-app-accent' : 'text-app-muted hover:text-app-accent'}"
+									>
+										<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+											<circle cx="12" cy="12" r="9" stroke-width="2" />
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 7v5l3 3" />
+										</svg>
+									</Popover.Trigger>
+								{/snippet}
 							</Tooltip.Trigger>
 							<Tooltip.Portal>
 								<Tooltip.Content

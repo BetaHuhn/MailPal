@@ -35,7 +35,8 @@
     "wrangler": "^4.76.0"
   },
   "dependencies": {
-    "bits-ui": "^2.16.3"
+    "bits-ui": "^2.16.3",
+    "iron-session": "^8.0.4"
   },
   "type": "module"
 }

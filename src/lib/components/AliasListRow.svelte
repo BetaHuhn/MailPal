@@ -440,6 +440,7 @@
 				onclick={handleToggle}
 				disabled={toggling}
 				aria-pressed={alias.enabled}
+				aria-label={alias.enabled ? 'Disable alias' : 'Enable alias'}
 				class="flex items-center justify-end gap-2 min-w-[5.5rem] group/toggle disabled:opacity-60"
 			>
 				<div
@@ -589,7 +590,9 @@
 								class="flex items-center gap-2 p-2.5 rounded-lg border border-app-border bg-app-bg/40"
 							>
 								<ColorPicker bind:value={newTagColor} />
+								<label for="new-tag-{alias.domain}-{alias.localPart}" class="sr-only">Tag name</label>
 								<input
+									id="new-tag-{alias.domain}-{alias.localPart}"
 									type="text"
 									bind:value={newTagName}
 									placeholder="Tag name"
