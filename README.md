@@ -45,19 +45,19 @@ Unlike other alias services, **MailPal runs entirely inside your own Cloudflare 
 
 ## Features
 
-- **Your real inbox, never exposed**
+- **Your real inbox, never exposed** – 
 Give every service its own alias. When one goes spammy, kill it in one click — without changing your real address or losing your other accounts.
 
-- **Total control, zero subscriptions**
+- **Total control, zero subscriptions** – 
 MailPal runs entirely inside your own Cloudflare account on the free tier. No monthly fees, no vendor lock-in, no third-party servers ever seeing your mail.
 
-- **Smart aliases that manage themselves**
+- **Smart aliases that manage themselves** –
 Set an expiry date or a max-forward limit and aliases disable themselves automatically. Enable wildcard mode and MailPal auto-creates a new alias the first time any address at your domain receives mail.
 
-- **Always know what's happening**
+- **Always know what's happening** – 
 Every alias tracks forwarded and blocked counts plus a per-alias activity log — so you can see exactly which service leaked your address and when.
 
-- **Built for real workflows**
+- **Built for real workflows** – 
 Add notes, assign color tags, and use full-text search to find any alias in seconds. Bulk-enable, bulk-disable, or bulk-delete when you need to act fast. Manage multiple domains from a single dashboard.
 
 ## How it works
