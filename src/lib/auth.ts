@@ -1,62 +1,32 @@
-const COOKIE_NAME = 'mailpal_session';
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
-const enc = new TextEncoder();
+import { sealData, unsealData } from 'iron-session';
 
-async function hmacSign(password: string, data: string): Promise<string> {
-	const key = await crypto.subtle.importKey(
-		'raw',
-		enc.encode(password),
-		{ name: 'HMAC', hash: 'SHA-256' },
-		false,
-		['sign']
-	);
-	const sig = await crypto.subtle.sign('HMAC', key, enc.encode(data));
-	return btoa(String.fromCharCode(...new Uint8Array(sig)));
+export const COOKIE_NAME = 'mailpal_session';
+export const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
+
+interface SessionData {
+	authenticated: boolean;
 }
 
-async function hmacVerify(password: string, data: string, sig: string): Promise<boolean> {
-	const expected = await hmacSign(password, data);
-	// Constant-time comparison to prevent timing attacks
-	const a = enc.encode(expected);
-	const b = enc.encode(sig);
-	if (a.length !== b.length) return false;
-	let diff = 0;
-	for (let i = 0; i < a.length; i++) {
-		diff |= a[i] ^ b[i];
+/**
+ * Seals session data into an encrypted, authenticated token string.
+ * Uses iron-session (AES-256-CBC + HMAC-SHA-256) which is compatible
+ * with the Web Crypto API available in Cloudflare Workers.
+ */
+export async function createSession(password: string): Promise<string> {
+	const data: SessionData = { authenticated: true };
+	return sealData(data, { password, ttl: COOKIE_MAX_AGE });
+}
+
+/**
+ * Verifies a sealed session token and returns true if the session is valid.
+ * Returns false for any invalid or tampered token.
+ */
+export async function verifySession(sealed: string | undefined, password: string): Promise<boolean> {
+	if (!sealed) return false;
+	try {
+		const data = await unsealData<SessionData>(sealed, { password, ttl: COOKIE_MAX_AGE });
+		return data.authenticated === true;
+	} catch {
+		return false;
 	}
-	return diff === 0;
-}
-
-export async function createSessionCookie(password: string): Promise<string> {
-	const payload = `session:${Date.now()}`;
-	const sig = await hmacSign(password, payload);
-	const value = encodeURIComponent(`${payload}:${sig}`);
-	return `${COOKIE_NAME}=${value}; HttpOnly; Secure; SameSite=Lax; Max-Age=${COOKIE_MAX_AGE}; Path=/`;
-}
-
-export async function verifySessionCookie(
-	cookieHeader: string | null,
-	password: string
-): Promise<boolean> {
-	if (!cookieHeader) return false;
-
-	const match = cookieHeader
-		.split(';')
-		.map((c) => c.trim())
-		.find((c) => c.startsWith(`${COOKIE_NAME}=`));
-
-	if (!match) return false;
-
-	const raw = decodeURIComponent(match.slice(COOKIE_NAME.length + 1));
-	const lastColon = raw.lastIndexOf(':');
-	if (lastColon === -1) return false;
-
-	const payload = raw.slice(0, lastColon);
-	const sig = raw.slice(lastColon + 1);
-
-	return hmacVerify(password, payload, sig);
-}
-
-export function clearSessionCookie(): string {
-	return `${COOKIE_NAME}=; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Path=/`;
 }

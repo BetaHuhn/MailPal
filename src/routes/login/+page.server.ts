@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { createSessionCookie } from '$lib/auth.js';
+import { createSession, COOKIE_NAME, COOKIE_MAX_AGE } from '$lib/auth.js';
 
 export const load: PageServerLoad = async ({ locals }) => {
 	if (locals.authenticated) throw redirect(302, '/');
@@ -21,21 +21,14 @@ export const actions: Actions = {
 			return fail(401, { error: 'Invalid password' });
 		}
 
-		const cookieHeader = await createSessionCookie(authPassword);
-		// Parse the Set-Cookie header to extract name/value/options
-		const parts = cookieHeader.split(';').map((p) => p.trim());
-		const [nameVal, ...attrs] = parts;
-		const [, value] = nameVal.split('=');
+		const sealed = await createSession(authPassword);
 
-		const maxAgeAttr = attrs.find((a) => a.toLowerCase().startsWith('max-age='));
-		const maxAge = maxAgeAttr ? parseInt(maxAgeAttr.split('=')[1]) : 60 * 60 * 24 * 30;
-
-		cookies.set('mailpal_session', decodeURIComponent(value), {
+		cookies.set(COOKIE_NAME, sealed, {
 			path: '/',
 			httpOnly: true,
 			secure: true,
 			sameSite: 'lax',
-			maxAge
+			maxAge: COOKIE_MAX_AGE
 		});
 
 		throw redirect(302, '/');

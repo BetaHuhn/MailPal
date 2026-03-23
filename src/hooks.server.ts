@@ -1,5 +1,5 @@
 import { redirect, type Handle } from '@sveltejs/kit';
-import { verifySessionCookie } from '$lib/auth.js';
+import { verifySession, COOKIE_NAME } from '$lib/auth.js';
 
 const SECURITY_HEADERS: Record<string, string> = {
 	'X-Content-Type-Options': 'nosniff',
@@ -30,8 +30,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 	if (event.locals.authMode === 'cloudflare-access') {
 		event.locals.authenticated = true;
 	} else {
-		const cookie = event.request.headers.get('cookie');
-		event.locals.authenticated = await verifySessionCookie(cookie, authPassword!);
+		const sealed = event.cookies.get(COOKIE_NAME);
+		event.locals.authenticated = await verifySession(sealed, authPassword!);
 	}
 
 	const pathname = event.url.pathname;
