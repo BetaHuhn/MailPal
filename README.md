@@ -45,30 +45,20 @@ Unlike other alias services, **MailPal runs entirely inside your own Cloudflare 
 
 ## Features
 
-**Aliases**
-- Generate random aliases (`swift-meadow-412@yourdomain.com`) or set custom ones
-- Per-alias target override — forward a specific alias to a different inbox than the domain default
-- Enable / disable any alias instantly without deleting it
-- Wildcard mode — automatically create aliases on first use for any address at your domain
-- Set an expiry date or a max-forward limit — aliases disable themselves automatically
+**Your real inbox, never exposed**
+Give every service its own alias. When one goes spammy, kill it in one click — without changing your real address or losing your other accounts.
 
-**Privacy & Control**
-- Track forwarded and blocked counts per alias, plus last-used timestamp
-- Per-alias activity log — see every email that came through, when, and from where
-- Global activity feed — a full chronological view across all aliases and domains
-- Bulk actions — enable, disable, or delete multiple aliases at once
+**Total control, zero subscriptions**
+MailPal runs entirely inside your own Cloudflare account on the free tier. No monthly fees, no vendor lock-in, no third-party servers ever seeing your mail.
 
-**Organization**
-- Add notes to any alias to remember what it's for
-- Color tags — create named tags and assign them to aliases for filtering
-- Filter by status, domain, and tags; full-text search across address, note, and tags
-- Sortable by name, creation date, last used, or forwarded count
+**Smart aliases that manage themselves**
+Set an expiry date or a max-forward limit and aliases disable themselves automatically. Enable wildcard mode and MailPal auto-creates a new alias the first time any address at your domain receives mail.
 
-**Infrastructure**
-- Multi-domain — manage multiple domains from a single dashboard
-- Auth — password protection via HMAC-signed session cookies, or delegate to Cloudflare Access
-- Runs entirely on Cloudflare's free tier (Pages + Workers + KV)
-- No subscriptions, no third-party servers, ever
+**Always know what's happening**
+Every alias tracks forwarded and blocked counts plus a per-alias activity log — so you can see exactly which service leaked your address and when.
+
+**Built for real workflows**
+Add notes, assign color tags, and use full-text search to find any alias in seconds. Bulk-enable, bulk-disable, or bulk-delete when you need to act fast. Manage multiple domains from a single dashboard.
 
 ## How it works
 
