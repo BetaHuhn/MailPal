@@ -62,6 +62,8 @@ Add notes, assign color tags, and use full-text search to find any alias in seco
 
 ## How it works
 
+> Note: this project has been built with the use of AI tools like Claude Code and GitHub Copilot/Agents. 
+
 ```
 mailpal/                        ← SvelteKit dashboard → Cloudflare Pages
 └── email-worker/               ← Email handler       → Cloudflare Worker
