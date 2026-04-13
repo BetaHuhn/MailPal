@@ -1,12 +1,39 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
   	import { DEMO_URL, GITHUB_URL } from '$lib';
 
-	// Flow diagram animation
-	import { onMount } from 'svelte';
 	let mounted = $state(false);
 	let activeTab = $state<'oneline' | 'manual'>('oneline');
 	let platform = $state<'unix' | 'windows'>('unix');
 	let copied = $state(false);
+	let aliasDisabled = $state(false);
+	let aliasDisabledDelayed = $state(false);
+	let copiedCode = $state<string | null>(null);
+
+	$effect(() => {
+		if (aliasDisabled) {
+			const timeout = setTimeout(() => { aliasDisabledDelayed = true; }, 300);
+			return () => clearTimeout(timeout);
+		} else {
+			aliasDisabledDelayed = false;
+		}
+	});
+
+	async function copyCode(code: string) {
+		try {
+			await navigator.clipboard.writeText(code);
+			copiedCode = code;
+			setTimeout(() => { copiedCode = null; }, 2000);
+		} catch (err) {
+			console.warn('Failed to copy to clipboard:', err);
+		}
+	}
+
+	function copyCommand() {
+		navigator.clipboard.writeText(platform === 'unix' ? unixCmd : windowsCmd);
+		copied = true;
+		setTimeout(() => { copied = false; }, 2000);
+	}
 
 	const unixCmd = 'curl -fsSL https://mailpal.cc/install | bash';
 	const windowsCmd = 'irm https://mailpal.cc/install | iex';
@@ -15,12 +42,6 @@
 		mounted = true;
 		platform = navigator.userAgent.includes('Windows') ? 'windows' : 'unix';
 	});
-
-	function copyCommand() {
-		navigator.clipboard.writeText(platform === 'unix' ? unixCmd : windowsCmd);
-		copied = true;
-		setTimeout(() => { copied = false; }, 2000);
-	}
 
 	const features = [
 		{
@@ -287,44 +308,78 @@ wrangler pages deploy`
 			<!-- Alias -->
 			<div class="flex flex-col items-center gap-3">
 				<div
-					class="px-4 py-3 rounded-2xl flex flex-col items-center gap-1"
-					style="background: rgba(61,222,200,0.07); border: 1px solid rgba(61,222,200,0.4); box-shadow: 0 0 32px rgba(61,222,200,0.14)"
+					class="relative px-4 py-3 rounded-2xl flex flex-col items-center gap-1 transition-all duration-300"
+					style={aliasDisabled
+						? 'background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.35)'
+						: 'background: rgba(61,222,200,0.07); border: 1px solid rgba(61,222,200,0.4); box-shadow: 0 0 32px rgba(61,222,200,0.14)'}
 				>
-					<span class="text-sm font-mono text-[#3ddec8] leading-snug whitespace-nowrap">shop-pine-wood</span>
-					<span class="text-sm font-mono text-[#3ddec8] leading-snug whitespace-nowrap">@yourdomain.com</span>
+					{#if aliasDisabledDelayed}
+						<div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-red-400" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.35); backdrop-filter: blur(4px)">Disabled</div>
+					{/if}
+					<span class="text-sm font-mono leading-snug whitespace-nowrap transition-all duration-300" style={aliasDisabled ? 'color: #5c6492; text-decoration: line-through' : 'color: #3ddec8'}>shop-pine-wood</span>
+					<span class="text-sm font-mono leading-snug whitespace-nowrap transition-all duration-300" style={aliasDisabled ? 'color: #5c6492; text-decoration: line-through' : 'color: #3ddec8'}>@yourdomain.com</span>
 				</div>
-				<span class="text-xs text-[#3ddec8]/60 text-center">Your Alias</span>
+				<span class="text-xs text-center transition-colors duration-300" style={aliasDisabled ? 'color: rgba(239,68,68,0.5)' : 'color: rgba(61,222,200,0.6)'}>Your Alias</span>
 			</div>
 
 			<!-- Arrow 2 -->
 			<div class="flex items-center mx-4 sm:mx-8 mb-6">
-				<div class="w-12 sm:w-20 h-px bg-[#252943] relative">
-					<div class="flow-dot" style="animation-delay: 0.55s"></div>
-					<div class="flow-dot" style="animation-delay: 1.65s"></div>
+				<div class="w-12 sm:w-20 h-px relative transition-colors duration-300" style={aliasDisabled ? 'background: rgba(239,68,68,0.3)' : 'background: #252943'}>
+					{#if aliasDisabledDelayed}
+						<div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4)">
+							<svg class="w-3 h-3 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+						</div>
+					{:else}
+						<div class="flow-dot" style="animation-delay: 0.55s"></div>
+						<div class="flow-dot" style="animation-delay: 1.65s"></div>
+					{/if}
 				</div>
-				<svg class="w-2 h-3 text-[#252943] ml-px flex-shrink-0" viewBox="0 0 6 10" fill="currentColor" aria-hidden="true">
+				<svg class="w-2 h-3 ml-px flex-shrink-0 transition-colors duration-300" style={aliasDisabled ? 'color: rgba(239,68,68,0.3)' : 'color: #252943'} viewBox="0 0 6 10" fill="currentColor" aria-hidden="true">
 					<path d="M0 0L6 5L0 10Z"/>
 				</svg>
 			</div>
 
 			<!-- Protected inbox -->
 			<div class="flex flex-col items-center gap-3">
-				<div class="relative w-16 h-16 rounded-2xl bg-[#1b1e31] border border-[#252943] flex items-center justify-center">
+				<div class="relative w-16 h-16 rounded-2xl bg-[#1b1e31] flex items-center justify-center transition-all duration-300" style={aliasDisabled ? 'border: 1px solid rgba(239,68,68,0.25); opacity: 0.5' : 'border: 1px solid #252943'}>
 					<svg class="w-7 h-7 text-[#5c6492]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
 					</svg>
 					<div
-						class="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center"
-						style="background: rgba(61,222,200,0.12); border: 1px solid rgba(61,222,200,0.25)"
+						class="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300"
+						style={aliasDisabled ? 'background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); backdrop-filter: blur(4px)' : 'background: rgba(61,222,200,0.12); border: 1px solid rgba(61,222,200,0.25)'}
 					>
-						<svg class="w-3 h-3 text-[#3ddec8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-							<rect x="3" y="11" width="18" height="11" rx="2" stroke-width="2"/>
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11V7a5 5 0 0110 0v4"/>
-						</svg>
+						{#if aliasDisabledDelayed}
+							<svg class="w-3 h-3 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+						{:else}
+							<svg class="w-3 h-3 text-[#3ddec8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+								<rect x="3" y="11" width="18" height="11" rx="2" stroke-width="2"/>
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11V7a5 5 0 0110 0v4"/>
+							</svg>
+						{/if}
 					</div>
 				</div>
-				<span class="text-xs text-[#5c6492] text-center leading-tight">Your<br>Inbox</span>
+				<span class="text-xs text-center leading-tight transition-colors duration-300" style={aliasDisabled ? 'color: rgba(239,68,68,0.4)' : 'color: #5c6492'}>Your<br>Inbox</span>
 			</div>
+		</div>
+
+		<div class="flex items-center justify-center mt-2">
+			<button
+					onclick={() => aliasDisabled = !aliasDisabled}
+					aria-label={aliasDisabled ? 'Re-enable email alias' : 'Disable email alias'}
+					class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300 flex items-center gap-1.5"
+					style={aliasDisabled
+						? 'background: rgba(61,222,200,0.08); border: 1px solid rgba(61,222,200,0.3); color: #3ddec8'
+						: 'background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.28); color: #f87171'}
+				>
+					{#if aliasDisabledDelayed}
+						<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+						Re-enable
+					{:else}
+						<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+						Disable Alias
+					{/if}
+				</button>
 		</div>
 
 		<!-- Steps description -->
@@ -477,25 +532,89 @@ wrangler pages deploy`
 		</div>
 
 		<!-- Architecture diagram -->
-		<div class="mt-8 bg-[#1b1e31] border border-[#252943] rounded-2xl p-8">
-			<h3 class="text-lg font-semibold text-[#dde1f5] mb-6 text-center">Architecture overview</h3>
-			<div class="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-				<div class="rounded-xl border border-[#252943] p-5" style="background: rgba(61,222,200,0.04)">
-					<div class="flex items-center gap-2.5 mb-3">
-						<div class="w-2.5 h-2.5 rounded-full bg-[#3ddec8]"></div>
-						<span class="text-sm font-semibold text-[#dde1f5]">SvelteKit Dashboard</span>
+		<div class="mt-8 bg-[#1b1e31] border border-[#252943] rounded-2xl p-6 sm:p-8">
+			<h3 class="text-lg font-semibold text-[#dde1f5] mb-8 text-center">Architecture overview</h3>
+
+			<!-- Three-node diagram -->
+			<div class="flex items-center justify-center flex-wrap gap-0 max-w-2xl mx-auto">
+
+				<!-- Dashboard node -->
+				<div class="flex flex-col items-center">
+					<div class="rounded-xl p-4 w-36 sm:w-40 text-center" style="background: rgba(61,222,200,0.05); border: 1px solid rgba(61,222,200,0.2)">
+						<div class="w-8 h-8 rounded-lg mx-auto mb-2.5 flex items-center justify-center" style="background: rgba(61,222,200,0.1); border: 1px solid rgba(61,222,200,0.2)">
+							<svg class="w-4 h-4 text-[#3ddec8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+							</svg>
+						</div>
+						<div class="text-xs font-semibold mb-1" style="color: rgba(61,222,200,0.8)">Dashboard</div>
+						<div class="text-[10px] leading-snug text-[#5c6492]">SvelteKit<br>CF Pages</div>
 					</div>
-					<p class="text-xs text-[#5c6492] leading-relaxed">Management UI + REST API deployed to <strong class="text-[#dde1f5]">Cloudflare Pages</strong>. Create and manage aliases, domains, tags, and view activity logs.</p>
 				</div>
-				<div class="rounded-xl border border-[#252943] p-5" style="background: rgba(245,158,11,0.04)">
-					<div class="flex items-center gap-2.5 mb-3">
-						<div class="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
-						<span class="text-sm font-semibold text-[#dde1f5]">Email Worker</span>
+
+				<!-- Connector: Dashboard ↔ KV -->
+				<div class="flex flex-col items-center gap-1 mx-1 sm:mx-2 mb-1">
+					<span class="text-[9px] text-[#5c6492]">read/write</span>
+					<div class="flex items-center">
+						<svg class="w-2 h-2.5 text-[#252943]" viewBox="0 0 6 10" fill="currentColor" style="transform: rotate(180deg)" aria-hidden="true"><path d="M0 0L6 5L0 10Z"/></svg>
+						<div class="w-8 sm:w-12 h-px bg-[#252943]"></div>
+						<svg class="w-2 h-2.5 text-[#252943]" viewBox="0 0 6 10" fill="currentColor" aria-hidden="true"><path d="M0 0L6 5L0 10Z"/></svg>
 					</div>
-					<p class="text-xs text-[#5c6492] leading-relaxed">Lightweight handler deployed to <strong class="text-[#dde1f5]">Cloudflare Workers</strong>. Intercepts incoming mail, checks alias state in KV, and forwards or rejects accordingly.</p>
+				</div>
+
+				<!-- KV Storage node (centre, highlighted) -->
+				<div class="flex flex-col items-center">
+					<div class="rounded-xl p-4 w-36 sm:w-40 text-center" style="background: rgba(61,222,200,0.09); border: 1px solid rgba(61,222,200,0.38); box-shadow: 0 0 24px rgba(61,222,200,0.08)">
+						<div class="w-8 h-8 rounded-lg mx-auto mb-2.5 flex items-center justify-center" style="background: rgba(61,222,200,0.15); border: 1px solid rgba(61,222,200,0.3)">
+							<svg class="w-4 h-4 text-[#3ddec8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+								<ellipse cx="12" cy="5" rx="9" ry="3" stroke-width="1.5"/>
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 5v6c0 1.657 4.03 3 9 3s9-1.343 9-3V5"/>
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 11v6c0 1.657 4.03 3 9 3s9-1.343 9-3v-6"/>
+							</svg>
+						</div>
+						<div class="text-xs font-semibold text-[#3ddec8] mb-1">KV Storage</div>
+						<div class="text-[10px] leading-snug text-[#5c6492]">Alias configs<br>CF KV</div>
+					</div>
+				</div>
+
+				<!-- Connector: KV ↔ Email Worker -->
+				<div class="flex flex-col items-center gap-1 mx-1 sm:mx-2 mb-1">
+					<span class="text-[9px] text-[#5c6492]">read/write</span>
+					<div class="flex items-center">
+						<svg class="w-2 h-2.5 text-[#252943]" viewBox="0 0 6 10" fill="currentColor" style="transform: rotate(180deg)" aria-hidden="true"><path d="M0 0L6 5L0 10Z"/></svg>
+						<div class="w-8 sm:w-12 h-px bg-[#252943]"></div>
+						<svg class="w-2 h-2.5 text-[#252943]" viewBox="0 0 6 10" fill="currentColor" aria-hidden="true"><path d="M0 0L6 5L0 10Z"/></svg>
+					</div>
+				</div>
+
+				<!-- Email Worker node -->
+				<div class="flex flex-col items-center">
+					<div class="rounded-xl p-4 w-36 sm:w-40 text-center" style="background: rgba(245,158,11,0.05); border: 1px solid rgba(245,158,11,0.25)">
+						<div class="w-8 h-8 rounded-lg mx-auto mb-2.5 flex items-center justify-center" style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2)">
+							<svg class="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+							</svg>
+						</div>
+						<div class="text-xs font-semibold text-amber-400 mb-1">Email Worker</div>
+						<div class="text-[10px] leading-snug text-[#5c6492]">Mail handler<br>CF Workers</div>
+					</div>
 				</div>
 			</div>
-			<p class="text-center text-xs text-[#5c6492] mt-4">Both components share a single <strong class="text-[#dde1f5]">Cloudflare KV</strong> namespace for state.</p>
+
+			<!-- Email flow legend -->
+			<div
+				class="mt-6 flex items-center justify-center gap-2 flex-wrap text-xs text-[#5c6492]"
+				aria-label="Email flow: Incoming email flows to Email Worker, then forwards or rejects. Dashboard manages aliases via KV."
+			>
+				<span>Incoming email</span>
+				<svg class="w-2.5 h-2.5" viewBox="0 0 6 10" fill="currentColor" style="color: #3a3f60" aria-label="flows to"><path d="M0 0L6 5L0 10Z"/></svg>
+				<span class="text-amber-400/70">Email Worker</span>
+				<svg class="w-2.5 h-2.5" viewBox="0 0 6 10" fill="currentColor" style="color: #3a3f60" aria-label="then"><path d="M0 0L6 5L0 10Z"/></svg>
+				<span>forward or reject</span>
+				<span class="text-[#252943] mx-0.5" aria-hidden="true">·</span>
+				<span class="text-[#3ddec8]/60">Dashboard</span>
+				<svg class="w-2.5 h-2.5" viewBox="0 0 6 10" fill="currentColor" style="color: #3a3f60" aria-label="manages"><path d="M0 0L6 5L0 10Z"/></svg>
+				<span>manage aliases via KV</span>
+			</div>
 		</div>
 	</div>
 </section>
@@ -649,14 +768,46 @@ wrangler pages deploy`
 								<p class="text-sm text-[#5c6492] leading-relaxed">{@html step.description}</p>
 							{/if}
 							{#if step.code}
-								<pre class="rounded-lg bg-[#161929] border border-[#252943]/60 p-3.5 text-xs text-[#3ddec8] font-mono overflow-x-auto leading-relaxed"><code>{step.code}</code></pre>
+								<div class="relative group/code">
+									<pre class="rounded-lg bg-[#161929] border border-[#252943]/60 p-3.5 text-xs text-[#3ddec8] font-mono overflow-x-auto leading-relaxed"><code>{step.code}</code></pre>
+									<button
+										onclick={() => copyCode(step.code!)}
+										class="absolute top-2 right-2 opacity-0 group-hover/code:opacity-100 transition-opacity px-2 py-1 rounded-md text-[10px] font-medium flex items-center gap-1"
+										style={copiedCode === step.code ? 'background: rgba(61,222,200,0.15); border: 1px solid rgba(61,222,200,0.35); color: #3ddec8' : 'background: rgba(37,41,67,0.95); border: 1px solid rgba(61,222,200,0.18); color: #5c6492'}
+										aria-label={copiedCode === step.code ? 'Code copied' : 'Copy code'}
+									>
+										{#if copiedCode === step.code}
+											<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+											Copied
+										{:else}
+											<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+											Copy
+										{/if}
+									</button>
+								</div>
 							{/if}
 							{#if step.split}
 								<div class="grid sm:grid-cols-2 gap-3 mt-3">
 									{#each step.split as part}
 										<div>
 											<p class="text-xs text-[#5c6492] mb-1.5"><code class="text-[#3ddec8] text-xs">{part.label}</code></p>
-											<pre class="rounded-lg bg-[#161929] border border-[#252943]/60 p-3 text-xs text-[#dde1f5]/80 font-mono overflow-x-auto leading-relaxed"><code>{part.code}</code></pre>
+											<div class="relative group/code">
+												<pre class="rounded-lg bg-[#161929] border border-[#252943]/60 p-3 text-xs text-[#dde1f5]/80 font-mono overflow-x-auto leading-relaxed"><code>{part.code}</code></pre>
+												<button
+													onclick={() => copyCode(part.code)}
+													class="absolute top-2 right-2 opacity-0 group-hover/code:opacity-100 transition-opacity px-2 py-1 rounded-md text-[10px] font-medium flex items-center gap-1"
+													style={copiedCode === part.code ? 'background: rgba(61,222,200,0.15); border: 1px solid rgba(61,222,200,0.35); color: #3ddec8' : 'background: rgba(37,41,67,0.95); border: 1px solid rgba(61,222,200,0.18); color: #5c6492'}
+													aria-label={copiedCode === part.code ? 'Code copied' : 'Copy code'}
+												>
+													{#if copiedCode === part.code}
+														<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+														Copied
+													{:else}
+														<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+														Copy
+													{/if}
+												</button>
+											</div>
 										</div>
 									{/each}
 								</div>
@@ -745,13 +896,13 @@ wrangler pages deploy`
 			<a href={DEMO_URL} target="_blank" rel="noopener noreferrer" class="text-sm text-[#5c6492] hover:text-[#dde1f5] transition-colors">
 				Live Demo
 			</a>
+			<a href="#setup" class="text-sm text-[#5c6492] hover:text-[#dde1f5] transition-colors">Setup</a>
 			<a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" class="text-sm text-[#5c6492] hover:text-[#dde1f5] transition-colors flex items-center gap-1.5">
 				<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 					<path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/>
 				</svg>
 				GitHub
 			</a>
-			<a href="#setup" class="text-sm text-[#5c6492] hover:text-[#dde1f5] transition-colors">Setup</a>
 		</div>
 	</div>
 </footer>
