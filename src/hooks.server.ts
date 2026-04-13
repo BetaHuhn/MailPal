@@ -12,6 +12,8 @@ const SECURITY_HEADERS: Record<string, string> = {
 export const handle: Handle = async ({ event, resolve }) => {
 	const platform = event.platform;
 
+	console.log(`Handling request for ${event.url.pathname} in mode ${platform?.env?.DEMO_MODE ? 'demo' : 'production'}`);
+
 	// ── Demo mode ───────────────────────────────────────────────────────────
 	if (platform?.env?.DEMO_MODE) {
 		event.locals.kv = new DemoKV() as unknown as App.Locals['kv'];
