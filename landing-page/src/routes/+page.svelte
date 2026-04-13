@@ -14,7 +14,9 @@
 			await navigator.clipboard.writeText(code);
 			copiedCode = code;
 			setTimeout(() => { copiedCode = null; }, 2000);
-		} catch { /* clipboard API may be unavailable */ }
+		} catch (err) {
+			console.warn('Failed to copy to clipboard:', err);
+		}
 	}
 
 	const GITHUB_URL = 'https://github.com/betahuhn/mailpal';
@@ -299,6 +301,7 @@ wrangler pages deploy`
 				<span class="text-xs text-center transition-colors duration-500" style={aliasDisabled ? 'color: rgba(239,68,68,0.5)' : 'color: rgba(61,222,200,0.6)'}>Your Alias</span>
 				<button
 					onclick={() => aliasDisabled = !aliasDisabled}
+					aria-label={aliasDisabled ? 'Re-enable email alias' : 'Disable email alias'}
 					class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300 flex items-center gap-1.5"
 					style={aliasDisabled
 						? 'background: rgba(61,222,200,0.08); border: 1px solid rgba(61,222,200,0.3); color: #3ddec8'
@@ -574,15 +577,18 @@ wrangler pages deploy`
 			</div>
 
 			<!-- Email flow legend -->
-			<div class="mt-6 flex items-center justify-center gap-2 flex-wrap text-xs text-[#5c6492]">
+			<div
+				class="mt-6 flex items-center justify-center gap-2 flex-wrap text-xs text-[#5c6492]"
+				aria-label="Email flow: Incoming email flows to Email Worker, then forwards or rejects. Dashboard manages aliases via KV."
+			>
 				<span>Incoming email</span>
-				<svg class="w-2.5 h-2.5" viewBox="0 0 6 10" fill="currentColor" style="color: #3a3f60" aria-hidden="true"><path d="M0 0L6 5L0 10Z"/></svg>
+				<svg class="w-2.5 h-2.5" viewBox="0 0 6 10" fill="currentColor" style="color: #3a3f60" aria-label="flows to"><path d="M0 0L6 5L0 10Z"/></svg>
 				<span class="text-amber-400/70">Email Worker</span>
-				<svg class="w-2.5 h-2.5" viewBox="0 0 6 10" fill="currentColor" style="color: #3a3f60" aria-hidden="true"><path d="M0 0L6 5L0 10Z"/></svg>
+				<svg class="w-2.5 h-2.5" viewBox="0 0 6 10" fill="currentColor" style="color: #3a3f60" aria-label="then"><path d="M0 0L6 5L0 10Z"/></svg>
 				<span>forward or reject</span>
-				<span class="text-[#252943] mx-0.5">·</span>
+				<span class="text-[#252943] mx-0.5" aria-hidden="true">·</span>
 				<span class="text-[#3ddec8]/60">Dashboard</span>
-				<svg class="w-2.5 h-2.5" viewBox="0 0 6 10" fill="currentColor" style="color: #3a3f60" aria-hidden="true"><path d="M0 0L6 5L0 10Z"/></svg>
+				<svg class="w-2.5 h-2.5" viewBox="0 0 6 10" fill="currentColor" style="color: #3a3f60" aria-label="manages"><path d="M0 0L6 5L0 10Z"/></svg>
 				<span>manage aliases via KV</span>
 			</div>
 		</div>
@@ -649,7 +655,7 @@ wrangler pages deploy`
 										onclick={() => copyCode(step.code!)}
 										class="absolute top-2 right-2 opacity-0 group-hover/code:opacity-100 transition-opacity px-2 py-1 rounded-md text-[10px] font-medium flex items-center gap-1"
 										style={copiedCode === step.code ? 'background: rgba(61,222,200,0.15); border: 1px solid rgba(61,222,200,0.35); color: #3ddec8' : 'background: rgba(37,41,67,0.95); border: 1px solid rgba(61,222,200,0.18); color: #5c6492'}
-										aria-label="Copy code"
+										aria-label={copiedCode === step.code ? 'Code copied' : 'Copy code'}
 									>
 										{#if copiedCode === step.code}
 											<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
@@ -672,7 +678,7 @@ wrangler pages deploy`
 													onclick={() => copyCode(part.code)}
 													class="absolute top-2 right-2 opacity-0 group-hover/code:opacity-100 transition-opacity px-2 py-1 rounded-md text-[10px] font-medium flex items-center gap-1"
 													style={copiedCode === part.code ? 'background: rgba(61,222,200,0.15); border: 1px solid rgba(61,222,200,0.35); color: #3ddec8' : 'background: rgba(37,41,67,0.95); border: 1px solid rgba(61,222,200,0.18); color: #5c6492'}
-													aria-label="Copy code"
+													aria-label={copiedCode === part.code ? 'Code copied' : 'Copy code'}
 												>
 													{#if copiedCode === part.code}
 														<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
