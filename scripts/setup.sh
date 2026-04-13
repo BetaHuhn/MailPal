@@ -85,6 +85,39 @@ fi
 
 chmod +x "${DEST}"
 
+if [ "${OS}" = "Darwin" ]; then
+  if command -v xattr &>/dev/null; then
+    xattr -d com.apple.quarantine "${DEST}" &>/dev/null || true
+  fi
+
+  if command -v codesign &>/dev/null; then
+    codesign --force --sign - "${DEST}" &>/dev/null || true
+  fi
+fi
+
 # ── Run ───────────────────────────────────────────────────────────────────────
 
-exec "${DEST}" "$@"
+set +e
+"${DEST}" "$@"
+STATUS=$?
+set -e
+
+if [ "${STATUS}" -eq 0 ]; then
+  exit 0
+fi
+
+if [ "${OS}" = "Darwin" ] && { [ "${STATUS}" -eq 137 ] || [ "${STATUS}" -eq 9 ]; }; then
+  echo "The downloaded setup binary was blocked by macOS (exit ${STATUS})." >&2
+  echo "Falling back to the source installer (scripts/setup.ts) via Bun..." >&2
+
+  if command -v bun &>/dev/null; then
+    exec bun run "https://raw.githubusercontent.com/${REPO}/main/scripts/setup.ts" "$@"
+  fi
+
+  echo "Bun is required for fallback mode but was not found." >&2
+  echo "Install Bun and run:" >&2
+  echo "  bun run https://raw.githubusercontent.com/${REPO}/main/scripts/setup.ts" >&2
+  exit 1
+fi
+
+exit "${STATUS}"
