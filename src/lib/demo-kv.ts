@@ -9,11 +9,30 @@ interface MinimalKVNamespace {
 	list(options: { prefix?: string }): Promise<{ keys: { name: string }[] }>;
 }
 
+/**
+ * Serialised delta from the default seed state.
+ * A string value means the key was set/updated; null means the key was deleted.
+ */
+export type DemoDelta = Record<string, string | null>;
+
 export class DemoKV implements MinimalKVNamespace {
 	private readonly store: Map<string, string>;
+	private readonly mutations: Map<string, string | null>;
 
-	constructor() {
+	constructor(savedDelta?: DemoDelta) {
 		this.store = buildDemoKVData();
+		this.mutations = new Map();
+
+		if (savedDelta) {
+			for (const [key, value] of Object.entries(savedDelta)) {
+				if (value === null) {
+					this.store.delete(key);
+				} else {
+					this.store.set(key, value);
+				}
+				this.mutations.set(key, value);
+			}
+		}
 	}
 
 	async get(key: string): Promise<string | null> {
@@ -22,10 +41,12 @@ export class DemoKV implements MinimalKVNamespace {
 
 	async put(key: string, value: string): Promise<void> {
 		this.store.set(key, value);
+		this.mutations.set(key, value);
 	}
 
 	async delete(key: string): Promise<void> {
 		this.store.delete(key);
+		this.mutations.set(key, null);
 	}
 
 	async list(options: { prefix?: string } = {}): Promise<{ keys: { name: string }[] }> {
@@ -34,5 +55,14 @@ export class DemoKV implements MinimalKVNamespace {
 			.filter((k) => k.startsWith(prefix))
 			.map((name) => ({ name }));
 		return { keys };
+	}
+
+	/**
+	 * Returns the complete accumulated delta from the default seed state
+	 * (all keys loaded from a saved delta plus any new mutations this request).
+	 * Safe to serialise and store in a cookie for the next request.
+	 */
+	getDelta(): DemoDelta {
+		return Object.fromEntries(this.mutations);
 	}
 }
