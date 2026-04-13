@@ -19,9 +19,14 @@
 			desc: 'MailPal runs entirely inside your own Cloudflare account on the free tier. No monthly fees, no vendor lock-in, no third-party servers ever seeing your mail.'
 		},
 		{
+			icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>`,
+			title: 'Multi-domain support',
+			desc: 'Manage multiple domains from a single dashboard with color-coded dots for easy navigation. Each domain has its own settings and default forwarding address.'
+		},
+		{
 			icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>`,
-			title: 'Smart aliases that manage themselves',
-			desc: 'Set an expiry date or a max-forward limit and aliases disable themselves automatically. Enable wildcard mode and MailPal auto-creates aliases on first mail received.'
+			title: 'Aliases that manage themselves',
+			desc: 'Set an expiry date or a max-forward limit and aliases disable themselves automatically. Enable wildcard mode and MailPal auto-creates aliases on new emails.'
 		},
 		{
 			icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>`,
@@ -33,11 +38,6 @@
 			title: 'Built for real workflows',
 			desc: 'Add notes, assign color tags, and use full-text search to find any alias in seconds. Bulk-enable, bulk-disable, or bulk-delete when you need to act fast.'
 		},
-		{
-			icon: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>`,
-			title: 'Multi-domain support',
-			desc: 'Manage multiple domains from a single dashboard with color-coded dots for easy navigation. Each domain has its own settings and default forwarding address.'
-		}
 	];
 
 	const steps = [
@@ -222,7 +222,7 @@ wrangler pages deploy`
 			</span>
 			<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border border-[#252943] text-[#5c6492]">
 				<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-				Your data, your servers
+				Your data, your domains
 			</span>
 			<a
 				href={GITHUB_URL}
@@ -587,7 +587,7 @@ wrangler pages deploy`
 	></div>
 	<div class="max-w-2xl mx-auto text-center relative">
 		<h2 class="text-4xl font-light text-[#dde1f5] mb-4 leading-tight">
-			Take back control of<br><span class="font-bold text-[#3ddec8]">your inbox.</span>
+			Take Back Control of<br><span class="font-bold text-[#3ddec8]">Your Inbox.</span>
 		</h2>
 		<p class="text-[#5c6492] text-lg mb-10 max-w-lg mx-auto leading-relaxed">
 			Deploy MailPal to your own Cloudflare account in minutes. Free forever. No subscriptions. No compromises.
