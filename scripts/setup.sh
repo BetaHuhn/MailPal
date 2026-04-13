@@ -40,7 +40,7 @@ esac
 
 # ── Download ──────────────────────────────────────────────────────────────────
 
-DEST="$(mktemp)"
+DEST="$(mktemp "${TMPDIR:-/tmp}/mailpal-setup.XXXXXX")"
 trap 'rm -f "${DEST}"' EXIT
 
 echo "Downloading ${BINARY}..."

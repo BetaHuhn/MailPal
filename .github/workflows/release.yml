@@ -16,21 +16,19 @@ jobs:
         with:
           sparse-checkout: scripts
 
-      - name: Change to scripts directory
-        run: cd scripts
-
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
       - name: Build all targets
+        working-directory: scripts
         run: bun run build
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: setup-executables
-          path: dist/mailpal-setup-*
+          path: scripts/dist/mailpal-setup-*
           if-no-files-found: error
 
   release:
