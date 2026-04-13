@@ -359,7 +359,7 @@ async function configureAuth(repoPath: string): Promise<void> {
     return;
   }
 
-  const password = await prompt("Password");
+  const password = Bun.password("Password");
   if (!password) {
     log.warn("No password entered, skipping.");
     return;
