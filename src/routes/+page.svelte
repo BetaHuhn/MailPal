@@ -391,7 +391,7 @@
 
 <OnboardingFlow onboarded={data.onboarded} />
 
-<div class="flex h-screen overflow-hidden bg-app-bg text-app-text">
+<div class="flex {data.demo ? 'h-[calc(100vh-45px)]' : 'h-screen'} overflow-hidden bg-app-bg text-app-text">
 	<Sidebar
 		{domains}
 		{aliasCounts}
