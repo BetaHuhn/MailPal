@@ -6,6 +6,9 @@ email-worker/node_modules/
 .svelte-kit/
 build/
 
+# Setup script build output
+dist/
+
 # Cloudflare / Wrangler
 .wrangler/
 email-worker/.wrangler/

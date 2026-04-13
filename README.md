@@ -82,11 +82,37 @@ When a message arrives:
 
 ## Setup
 
-### Prerequisites
+### Quick setup (recommended)
+
+**macOS / Linux**
+```bash
+curl -fsSL https://mailpal.cc/install | bash
+```
+
+The script detects your platform, downloads the right setup executable from the [latest release](https://github.com/betahuhn/mailpal/releases/latest), and runs it automatically.
+
+**Windows (PowerShell)**
+```powershell
+irm https://github.com/betahuhn/mailpal/releases/latest/download/mailpal-setup-windows-x64.exe -OutFile mailpal-setup.exe
+.\mailpal-setup.exe
+```
+
+The setup executable will authenticate with Cloudflare, clone this repo, create a KV namespace, deploy the email worker, and deploy the Pages dashboard. Once it finishes, follow the [Email Routing](#4-configure-cloudflare-email-routing) step to connect your domain.
+
+> **Prefer Bun?** If you already have [Bun](https://bun.sh) installed:
+> ```bash
+> bun run https://raw.githubusercontent.com/betahuhn/mailpal/main/scripts/setup.ts
+> ```
+
+---
+
+### Manual setup
+
+#### Prerequisites
 
 - A Cloudflare account
 - A domain added to Cloudflare (DNS managed by Cloudflare)
-- [Node.js](https://nodejs.org) 18+
+- [Bun](https://bun.sh) or [Node.js](https://nodejs.org) 18+
 - [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/) installed and authenticated (`wrangler login`)
 
 ---
