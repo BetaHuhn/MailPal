@@ -1,9 +1,11 @@
+import type { RequestHandler } from '@sveltejs/kit';
+
 export const prerender = false;
 
 const SCRIPT_URL =
 	'https://raw.githubusercontent.com/betahuhn/mailpal/main/scripts/setup.sh';
 
-export async function GET({ fetch }) {
+export const GET: RequestHandler = async ({ fetch }) => {
 	const upstream = await fetch(SCRIPT_URL);
 
 	if (!upstream.ok) {

@@ -67,13 +67,8 @@ function stripAnsi(str: string): string {
   return str.replace(/\x1b\[[0-9;]*[mGKHF]/g, "");
 }
 
-async function commandExists(cmd: string): Promise<boolean> {
-  try {
-    await $`which ${cmd}`.quiet();
-    return true;
-  } catch {
-    return false;
-  }
+function commandExists(cmd: string): boolean {
+  return Bun.which(cmd) !== null;
 }
 
 // Wrangler may live globally, in node_modules/.bin, or be fetched via bunx.
@@ -91,7 +86,7 @@ function wrangler(repoPath?: string): string[] {
 async function checkPrerequisites(): Promise<void> {
   log.step(1, STEPS, "Checking prerequisites");
 
-  if (!(await commandExists("git"))) {
+  if (!commandExists("git")) {
     log.error("git is not installed. Please install git and try again.");
     process.exit(1);
   }

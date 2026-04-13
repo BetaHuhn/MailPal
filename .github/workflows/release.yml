@@ -45,6 +45,11 @@ jobs:
           name: setup-executables
           path: dist/
 
+      - name: Generate checksums
+        run: |
+          cd dist
+          sha256sum mailpal-setup-linux-x64 mailpal-setup-linux-arm64 mailpal-setup-macos-x64 mailpal-setup-macos-arm64 mailpal-setup-windows-x64.exe > mailpal-setup-checksums.txt
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
@@ -57,4 +62,5 @@ jobs:
             dist/mailpal-setup-macos-x64
             dist/mailpal-setup-macos-arm64
             dist/mailpal-setup-windows-x64.exe
+            dist/mailpal-setup-checksums.txt
 
