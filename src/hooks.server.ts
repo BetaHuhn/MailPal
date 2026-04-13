@@ -13,11 +13,11 @@ const SECURITY_HEADERS: Record<string, string> = {
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const platform = event.platform;
-
-	console.log(`Handling request for ${event.url.pathname} in mode ${platform?.env?.DEMO_MODE ? 'demo' : 'production'}`);
+	const demoMode = platform?.env?.DEMO_MODE;
+ 	const isDemoModeEnabled = demoMode === '1' || demoMode === 'true';
 
 	// ── Demo mode ───────────────────────────────────────────────────────────
-	if (platform?.env?.DEMO_MODE) {
+	if (isDemoModeEnabled) {
 		// Restore any previously saved mutations from the browser cookie.
 		let savedDelta: DemoDelta | undefined;
 		const raw = event.cookies.get(DEMO_STATE_COOKIE);
