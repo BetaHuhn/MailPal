@@ -57,26 +57,45 @@ cd email-worker && npm install && cd ..`
 		},
 		{
 			number: '3',
+			title: 'Configuring wrangler.toml files',
+			description: `After creating the KV namespace, add the same ID to <span class="text-[#dde1f5]">both</span> config files:`,
+			split: [
+				{
+					label: 'wrangler.toml',
+					code: `[[kv_namespaces]]
+binding = "KV"
+id = "YOUR_KV_ID"`
+				},
+				{
+					label: 'email-worker/wrangler.toml',
+					code: `[[kv_namespaces]]
+binding = "KV"
+id = "YOUR_KV_ID"`
+				}
+			]
+		},
+		{
+			number: '4',
 			title: 'Deploy the email worker',
 			code: `cd email-worker
 wrangler deploy`
 		},
 		{
-			number: '4',
+			number: '5',
 			title: 'Configure Email Routing',
-			description: 'In the Cloudflare dashboard, go to <strong>your domain → Email → Email Routing</strong>. Add a catch-all rule pointing to the <code>mailpal-email-worker</code> worker.'
+			description: 'In the Cloudflare dashboard, go to <span class="text-[#dde1f5]">your domain → Email → Email Routing</span>. Then add a catch-all rule pointing to the <span class="text-[#dde1f5]">mailpal-email-worker</span> worker.'
 		},
 		{
-			number: '5',
+			number: '6',
 			title: 'Deploy the dashboard',
 			code: `npm run build
 wrangler pages deploy`
 		},
 		{
-			number: '6',
+			number: '7',
 			title: 'Set a login password (optional)',
 			code: `wrangler pages secret put AUTH_PASSWORD`,
-			note: 'Alternatively, protect the dashboard with <strong>Cloudflare Access</strong> using your preferred identity provider.'
+			note: 'Alternatively, protect the dashboard with <span class="text-[#dde1f5]">Cloudflare Access</span> using your preferred identity provider.'
 		}
 	];
 
@@ -159,10 +178,10 @@ wrangler pages deploy`
 		</div>
 
 		<h1 class="text-5xl sm:text-6xl font-light text-[#dde1f5] mb-4 leading-tight">
-			Your friendly guardian<br>for <span class="font-bold text-[#3ddec8]">email privacy.</span>
+			Your Friendly Guardian<br>for <span class="font-bold text-[#3ddec8]">Email Privacy.</span>
 		</h1>
 		<p class="text-lg text-[#5c6492] leading-relaxed max-w-xl mx-auto mb-10">
-			Create unique email aliases for every service you sign up to — running entirely on <strong class="text-[#dde1f5] font-medium">your own Cloudflare account</strong>. Zero subscriptions. Zero data sharing.
+			Create unique email aliases for every service you sign up to — running on <strong class="text-[#dde1f5] font-medium">your own Cloudflare account</strong>. Zero subscriptions. Zero data sharing.
 		</p>
 
 		<div class="flex flex-wrap items-center justify-center gap-3">
@@ -173,48 +192,47 @@ wrangler pages deploy`
 				class="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-base font-semibold text-[#161929] bg-[#3ddec8] hover:bg-[#3ddec8]/90 transition-colors shadow-lg"
 				style="box-shadow: 0 0 32px rgba(61,222,200,0.25)"
 			>
-				<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+				<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+					<path stroke="none" d="M0 0h24v24H0z" fill="none" />
+					<path d="M6 4v16a1 1 0 0 0 1.524 .852l13 -8a1 1 0 0 0 0 -1.704l-13 -8a1 1 0 0 0 -1.524 .852z" />
 				</svg>
 				Try Live Demo
 			</a>
 			<a
-				href={GITHUB_URL}
-				target="_blank"
-				rel="noopener noreferrer"
+				href="#setup"
 				class="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-base font-medium text-[#dde1f5] bg-[#1b1e31] border border-[#252943] hover:border-[#3ddec8]/40 hover:bg-[#21253c] transition-colors"
 			>
-				<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-					<path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/>
-				</svg>
-				View on GitHub
-			</a>
-			<a
-				href="#setup"
-				class="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-base font-medium text-[#5c6492] hover:text-[#dde1f5] transition-colors"
-			>
-				Self-host it
+				<!-- Setup Icon -->
 				<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
 				</svg>
+				Self-host it
 			</a>
 		</div>
 
 		<!-- Badges -->
 		<div class="flex flex-wrap items-center justify-center gap-3 mt-10">
-			<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-[#3ddec8]/80" style="background: rgba(61,222,200,0.06); border: 1px solid rgba(61,222,200,0.25)">
-				<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+			<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border border-[#252943] text-[#5c6492]">
+				<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<path stroke="none" d="M0 0h24v24H0z" fill="none" />
+					<path d="M13.031 7.007c2.469 -.007 3.295 1.293 3.969 2.993c4 0 4.994 3.825 5 6h-20c-.001 -1.64 1.36 -2.954 3 -3c0 -1.5 1 -3 3 -3c.66 -1.942 2.562 -2.986 5.031 -2.993" />
+					<path d="M12 13h6" /><path d="M17 10l-2.5 6" />
+				</svg>
 				Free forever on Cloudflare
 			</span>
-			<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border border-[#252943] text-[#5c6492]">
-				<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+			<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border border-[#252943] text-[#5c6492]">
+				<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
 				Your data, your servers
 			</span>
-			<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border border-[#252943] text-[#5c6492]">
-				<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/></svg>
-				Open source
-			</span>
+			<a
+				href={GITHUB_URL}
+				target="_blank"
+				rel="noopener noreferrer"
+				class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border border-[#252943] text-[#5c6492]"
+			>
+				<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/></svg>
+				Open Source
+			</a>
 		</div>
 	</div>
 </section>
@@ -391,7 +409,7 @@ wrangler pages deploy`
 				</div>
 				<h3 class="text-xl font-bold text-[#dde1f5] mb-3">End-to-end privacy</h3>
 				<p class="text-[#5c6492] leading-relaxed mb-5">
-					MailPal processes your emails using Cloudflare Workers — code running inside your own Cloudflare account. No third-party company has access to your aliases or your email traffic.
+					MailPal processes your emails using Cloudflare Workers — code running inside your own Cloudflare account. No third-party has access to your aliases or your email traffic.
 				</p>
 				<ul class="space-y-2.5">
 					{#each ['No third-party data access', 'No email content stored', 'No analytics or tracking', 'Fully auditable open source code'] as item}
@@ -411,8 +429,14 @@ wrangler pages deploy`
 					class="w-12 h-12 rounded-2xl flex items-center justify-center mb-6"
 					style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2)"
 				>
-					<svg class="w-6 h-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+					<!-- <svg class="w-6 h-6 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+					</svg> -->
+					<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<path stroke="none" d="M0 0h24v24H0z" fill="none" />
+						<path d="M13.031 7.007c2.469 -.007 3.295 1.293 3.969 2.993c4 0 4.994 3.825 5 6h-20c-.001 -1.64 1.36 -2.954 3 -3c0 -1.5 1 -3 3 -3c.66 -1.942 2.562 -2.986 5.031 -2.993" />
+						<path d="M12 13h6" />
+						<path d="M17 10l-2.5 6" />
 					</svg>
 				</div>
 				<h3 class="text-xl font-bold text-[#dde1f5] mb-3">Free on Cloudflare's free tier</h3>
@@ -499,51 +523,40 @@ wrangler pages deploy`
 		<!-- Steps -->
 		<div class="space-y-4">
 			{#each steps as step}
-				<div class="bg-[#1b1e31] border border-[#252943] rounded-xl overflow-hidden">
-					<div class="flex items-start gap-4 p-5">
+				<div class="bg-[#1b1e31] border border-[#252943] rounded-xl overflow-hidden p-5 space-y-2">
+					<div class="flex items-start gap-3">
 						<div
-							class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 mt-0.5"
+							class="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
 							style="background: rgba(61,222,200,0.1); border: 1px solid rgba(61,222,200,0.25); color: #3ddec8"
 						>
 							{step.number}
 						</div>
-						<div class="flex-1 min-w-0">
-							<h3 class="text-base font-semibold text-[#dde1f5] mb-1">{step.title}</h3>
+						<h3 class="text-base font-semibold text-[#dde1f5] mb-1">{step.title}</h3>
+					</div>
+
+					<div class="flex-1 min-w-0 space-y-2">
 							{#if step.description}
 								<p class="text-sm text-[#5c6492] leading-relaxed">{@html step.description}</p>
 							{/if}
 							{#if step.code}
-								<pre class="mt-3 rounded-lg bg-[#161929] border border-[#252943]/60 p-3.5 text-xs text-[#3ddec8] font-mono overflow-x-auto leading-relaxed"><code>{step.code}</code></pre>
+								<pre class="rounded-lg bg-[#161929] border border-[#252943]/60 p-3.5 text-xs text-[#3ddec8] font-mono overflow-x-auto leading-relaxed"><code>{step.code}</code></pre>
+							{/if}
+							{#if step.split}
+								<div class="grid sm:grid-cols-2 gap-3 mt-3">
+									{#each step.split as part}
+										<div>
+											<p class="text-xs text-[#5c6492] mb-1.5"><code class="text-[#3ddec8] text-xs">{part.label}</code></p>
+											<pre class="rounded-lg bg-[#161929] border border-[#252943]/60 p-3 text-xs text-[#dde1f5]/80 font-mono overflow-x-auto leading-relaxed"><code>{part.code}</code></pre>
+										</div>
+									{/each}
+								</div>
 							{/if}
 							{#if step.note}
-								<p class="text-xs text-[#5c6492] mt-2.5 leading-relaxed">{@html step.note}</p>
+								<p class="text-sm text-[#5c6492] mt-2.5 leading-relaxed">{@html step.note}</p>
 							{/if}
 						</div>
-					</div>
 				</div>
 			{/each}
-		</div>
-
-		<!-- KV config note -->
-		<div class="mt-6 rounded-xl border border-[#252943] bg-[#1b1e31] p-5">
-			<h3 class="text-sm font-semibold text-[#dde1f5] mb-3">Configuring both wrangler.toml files</h3>
-			<p class="text-sm text-[#5c6492] mb-3 leading-relaxed">
-				After creating the KV namespace, add the same ID to <strong class="text-[#dde1f5]">both</strong> config files:
-			</p>
-			<div class="grid sm:grid-cols-2 gap-3">
-				<div>
-					<p class="text-xs text-[#5c6492] mb-1.5"><code class="text-[#3ddec8] text-xs">wrangler.toml</code> (root)</p>
-					<pre class="rounded-lg bg-[#161929] border border-[#252943]/60 p-3 text-xs text-[#dde1f5]/80 font-mono overflow-x-auto leading-relaxed"><code>[[kv_namespaces]]
-binding = "KV"
-id = "YOUR_KV_ID"</code></pre>
-				</div>
-				<div>
-					<p class="text-xs text-[#5c6492] mb-1.5"><code class="text-[#3ddec8] text-xs">email-worker/wrangler.toml</code></p>
-					<pre class="rounded-lg bg-[#161929] border border-[#252943]/60 p-3 text-xs text-[#dde1f5]/80 font-mono overflow-x-auto leading-relaxed"><code>[[kv_namespaces]]
-binding = "KV"
-id = "YOUR_KV_ID"</code></pre>
-				</div>
-			</div>
 		</div>
 
 		<div class="mt-8 text-center">
@@ -553,7 +566,7 @@ id = "YOUR_KV_ID"</code></pre>
 				rel="noopener noreferrer"
 				class="inline-flex items-center gap-2 text-sm text-[#5c6492] hover:text-[#dde1f5] transition-colors"
 			>
-				<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+				<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 					<path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/>
 				</svg>
 				Full documentation on GitHub
@@ -587,7 +600,11 @@ id = "YOUR_KV_ID"</code></pre>
 				class="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-base font-semibold text-[#161929] bg-[#3ddec8] hover:bg-[#3ddec8]/90 transition-colors"
 				style="box-shadow: 0 0 32px rgba(61,222,200,0.2)"
 			>
-				Try the Demo
+				<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+					<path stroke="none" d="M0 0h24v24H0z" fill="none" />
+					<path d="M6 4v16a1 1 0 0 0 1.524 .852l13 -8a1 1 0 0 0 0 -1.704l-13 -8a1 1 0 0 0 -1.524 .852z" />
+				</svg>
+				Try Live Demo
 			</a>
 			<a
 				href={GITHUB_URL}
@@ -599,9 +616,6 @@ id = "YOUR_KV_ID"</code></pre>
 					<path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/>
 				</svg>
 				View on GitHub
-			</a>
-			<a href="#setup" class="inline-flex items-center gap-1.5 px-4 py-3 text-base text-[#5c6492] hover:text-[#dde1f5] transition-colors">
-				Setup guide ↓
 			</a>
 		</div>
 	</div>
