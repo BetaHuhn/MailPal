@@ -1,11 +1,10 @@
 <script lang="ts">
+  	import { DEMO_URL, GITHUB_URL } from '$lib';
+
 	// Flow diagram animation
 	import { onMount } from 'svelte';
 	let mounted = $state(false);
 	onMount(() => { mounted = true; });
-
-	const GITHUB_URL = 'https://github.com/betahuhn/mailpal';
-	const DEMO_URL = 'https://demo.mailpal.cc';
 
 	const features = [
 		{

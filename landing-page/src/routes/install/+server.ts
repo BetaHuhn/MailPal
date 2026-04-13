@@ -11,7 +11,7 @@ export const GET: RequestHandler = async ({ fetch }) => {
 	if (!upstream.ok) {
 		return new Response('Failed to fetch setup script from GitHub.', {
 			status: 502,
-			headers: { 'Content-Type': 'text/plain' }
+			headers: { 'Content-Type': 'text/plain; charset=utf-8' }
 		});
 	}
 
@@ -19,7 +19,7 @@ export const GET: RequestHandler = async ({ fetch }) => {
 
 	return new Response(body, {
 		headers: {
-			'Content-Type': 'text/x-shellscript',
+			'Content-Type': 'text/x-shellscript; charset=utf-8',
 			'Cache-Control': 'public, max-age=300, stale-while-revalidate=60'
 		}
 	});
