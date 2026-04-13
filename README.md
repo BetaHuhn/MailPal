@@ -89,13 +89,12 @@ When a message arrives:
 curl -fsSL https://mailpal.cc/install | bash
 ```
 
-The script detects your platform, downloads the right setup executable from the [latest release](https://github.com/betahuhn/mailpal/releases/latest), and runs it automatically.
-
 **Windows (PowerShell)**
 ```powershell
-irm https://github.com/betahuhn/mailpal/releases/latest/download/mailpal-setup-windows-x64.exe -OutFile mailpal-setup.exe
-.\mailpal-setup.exe
+irm https://mailpal.cc/install | iex
 ```
+
+This will download the setup executable from the [latest release](https://github.com/betahuhn/mailpal/releases/latest), and run it automatically.
 
 The setup executable will authenticate with Cloudflare, clone this repo, create a KV namespace, deploy the email worker, and deploy the Pages dashboard. Once it finishes, follow the [Email Routing](#4-configure-cloudflare-email-routing) step to connect your domain.
 

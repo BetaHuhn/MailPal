@@ -4,7 +4,23 @@
 	// Flow diagram animation
 	import { onMount } from 'svelte';
 	let mounted = $state(false);
-	onMount(() => { mounted = true; });
+	let activeTab = $state<'oneline' | 'manual'>('oneline');
+	let platform = $state<'unix' | 'windows'>('unix');
+	let copied = $state(false);
+
+	const unixCmd = 'curl -fsSL https://mailpal.cc/install | bash';
+	const windowsCmd = 'irm https://mailpal.cc/install | iex';
+
+	onMount(() => {
+		mounted = true;
+		platform = navigator.userAgent.includes('Windows') ? 'windows' : 'unix';
+	});
+
+	function copyCommand() {
+		navigator.clipboard.writeText(platform === 'unix' ? unixCmd : windowsCmd);
+		copied = true;
+		setTimeout(() => { copied = false; }, 2000);
+	}
 
 	const features = [
 		{
@@ -488,14 +504,14 @@ wrangler pages deploy`
 <section id="setup" class="py-20 px-6" style="border-top: 1px solid rgba(37,41,67,0.4)">
 	<div class="max-w-3xl mx-auto">
 		<div class="text-center mb-14">
-			<h2 class="text-3xl font-bold text-[#dde1f5] mb-3">Set up in minutes</h2>
+			<h2 class="text-3xl font-bold text-[#dde1f5] mb-3">Set up in Minutes</h2>
 			<p class="text-[#5c6492] text-lg max-w-xl mx-auto">
-				You'll need a Cloudflare account, a domain managed by Cloudflare, Node.js 18+, and Wrangler CLI.
+				Deploy MailPal to your own Cloudflare account with a single command.
 			</p>
 		</div>
 
 		<!-- Prerequisites -->
-		<div class="bg-[#1b1e31] border border-[#252943] rounded-xl p-5 mb-8">
+		<div class="bg-[#1b1e31] border border-[#252943] rounded-xl p-5 mb-6">
 			<h3 class="text-sm font-semibold text-[#dde1f5] mb-3 flex items-center gap-2">
 				<svg class="w-4 h-4 text-[#3ddec8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
@@ -506,7 +522,7 @@ wrangler pages deploy`
 				{#each [
 					'A Cloudflare account (free)',
 					'A domain added to Cloudflare',
-					'Node.js 18+',
+					'Node.js 18+ or Bun',
 					'Wrangler CLI (npm i -g wrangler)'
 				] as req}
 					<li class="flex items-center gap-2 text-sm text-[#5c6492]">
@@ -519,21 +535,116 @@ wrangler pages deploy`
 			</ul>
 		</div>
 
-		<!-- Steps -->
-		<div class="space-y-4">
-			{#each steps as step}
-				<div class="bg-[#1b1e31] border border-[#252943] rounded-xl overflow-hidden p-5 space-y-2">
-					<div class="flex items-start gap-3">
-						<div
-							class="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
-							style="background: rgba(61,222,200,0.1); border: 1px solid rgba(61,222,200,0.25); color: #3ddec8"
-						>
-							{step.number}
-						</div>
-						<h3 class="text-base font-semibold text-[#dde1f5] mb-1">{step.title}</h3>
-					</div>
+		<!-- Tab switcher -->
+		<div class="flex rounded-xl bg-[#161929] border border-[#252943] p-1 gap-1 mb-6">
+			<button
+				onclick={() => activeTab = 'oneline'}
+				class="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all {activeTab === 'oneline' ? 'bg-[#3ddec8] text-[#161929] shadow-sm' : 'text-[#5c6492] hover:text-[#dde1f5]'}"
+			>
+				One-Line Install
+			</button>
+			<button
+				onclick={() => activeTab = 'manual'}
+				class="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all {activeTab === 'manual' ? 'bg-[#3ddec8] text-[#161929] shadow-sm' : 'text-[#5c6492] hover:text-[#dde1f5]'}"
+			>
+				Manual Setup
+			</button>
+		</div>
 
-					<div class="flex-1 min-w-0 space-y-2">
+		{#if activeTab === 'oneline'}
+			<div class="space-y-4">
+				<!-- Command block -->
+				<div class="bg-[#1b1e31] border border-[#252943] rounded-xl overflow-hidden">
+					<div class="flex items-center justify-between px-2.5 py-2.5 border-b border-[#252943]/60">
+						<!-- <div class="flex items-center gap-2.5">
+							<div class="flex gap-1.5" aria-hidden="true">
+								<div class="w-2.5 h-2.5 rounded-full bg-[#252943]"></div>
+								<div class="w-2.5 h-2.5 rounded-full bg-[#252943]"></div>
+								<div class="w-2.5 h-2.5 rounded-full bg-[#252943]"></div>
+							</div>
+							<span class="text-xs text-[#5c6492]">{platform === 'windows' ? 'PowerShell' : 'Terminal'}</span>
+						</div> -->
+
+						<!-- Platform selector -->
+							<div class="flex gap-2">
+								{#each [{ id: 'unix', label: 'macOS / Linux' }, { id: 'windows', label: 'Windows' }] as p}
+									<button
+										onclick={() => platform = p.id as 'unix' | 'windows'}
+										class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors {platform === p.id ? 'border-[#3ddec8]/40 text-[#3ddec8] bg-[#3ddec8]/[0.08]' : 'border-[#252943] text-[#5c6492] hover:text-[#dde1f5]'}"
+									>
+										{p.label}
+									</button>
+								{/each}
+							</div>
+
+						<div class="flex items-center gap-3">
+							
+
+							<button
+								onclick={copyCommand}
+								class="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {copied ? 'text-[#3ddec8] bg-[#3ddec8]/10' : 'text-[#5c6492] hover:text-[#dde1f5] hover:bg-[#21253c]'}"
+							>
+								{#if copied}
+									<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+									</svg>
+									Copied!
+								{:else}
+									<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+									</svg>
+									Copy
+								{/if}
+							</button>
+						</div>
+					</div>
+					{#if platform === 'unix'}
+						<pre class="px-4 py-3.5 text-sm text-[#3ddec8] font-mono overflow-x-auto leading-relaxed"><code>{unixCmd}</code></pre>
+					{:else}
+						<pre class="px-4 py-3.5 text-sm text-[#3ddec8] font-mono overflow-x-auto leading-relaxed"><code>{windowsCmd}</code></pre>
+					{/if}
+				</div>
+
+				<!-- What it does -->
+				<div class="bg-[#1b1e31] border border-[#252943] rounded-xl p-5">
+					<h4 class="text-sm font-semibold text-[#dde1f5] mb-3">The setup script will:</h4>
+					<ul class="space-y-2">
+						{#each [
+							'Authenticate with Cloudflare via Wrangler',
+							'Clone the repository to your machine',
+							'Create a KV namespace and configure both workers',
+							'Deploy the email worker to Cloudflare Workers',
+							'Build and deploy the dashboard to Cloudflare Pages',
+							'Optionally set a login password for the dashboard',
+						] as item}
+							<li class="flex items-start gap-2.5 text-sm text-[#5c6492]">
+								<svg class="w-3.5 h-3.5 text-[#3ddec8]/70 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+								</svg>
+								{item}
+							</li>
+						{/each}
+					</ul>
+					<p class="text-xs text-[#5c6492] mt-4 pt-4 border-t border-[#252943]/60">
+						After setup, configure a catch-all Email Routing rule in the Cloudflare dashboard pointing to <code class="text-[#dde1f5]">mailpal-email-worker</code>.
+					</p>
+				</div>
+			</div>
+		{:else}
+			<!-- Manual steps -->
+			<div class="space-y-4">
+				{#each steps as step}
+					<div class="bg-[#1b1e31] border border-[#252943] rounded-xl overflow-hidden p-5 space-y-2">
+						<div class="flex items-start gap-3">
+							<div
+								class="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+								style="background: rgba(61,222,200,0.1); border: 1px solid rgba(61,222,200,0.25); color: #3ddec8"
+							>
+								{step.number}
+							</div>
+							<h3 class="text-base font-semibold text-[#dde1f5] mb-1">{step.title}</h3>
+						</div>
+						<div class="flex-1 min-w-0 space-y-2">
 							{#if step.description}
 								<p class="text-sm text-[#5c6492] leading-relaxed">{@html step.description}</p>
 							{/if}
@@ -554,9 +665,10 @@ wrangler pages deploy`
 								<p class="text-sm text-[#5c6492] mt-2.5 leading-relaxed">{@html step.note}</p>
 							{/if}
 						</div>
-				</div>
-			{/each}
-		</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
 
 		<div class="mt-8 text-center">
 			<a
