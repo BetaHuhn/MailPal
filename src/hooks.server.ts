@@ -1,5 +1,8 @@
 import { redirect, type Handle } from '@sveltejs/kit';
 import { verifySession, COOKIE_NAME } from '$lib/auth.js';
+import { DemoKV, type DemoDelta } from '$lib/demo-kv.js';
+
+const DEMO_STATE_COOKIE = 'demo_state';
 
 const SECURITY_HEADERS: Record<string, string> = {
 	'X-Content-Type-Options': 'nosniff',
@@ -10,6 +13,49 @@ const SECURITY_HEADERS: Record<string, string> = {
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const platform = event.platform;
+	const demoMode = platform?.env?.DEMO_MODE;
+ 	const isDemoModeEnabled = demoMode === '1' || demoMode === 'true';
+
+	// ── Demo mode ───────────────────────────────────────────────────────────
+	if (isDemoModeEnabled) {
+		// Restore any previously saved mutations from the browser cookie.
+		let savedDelta: DemoDelta | undefined;
+		const raw = event.cookies.get(DEMO_STATE_COOKIE);
+		if (raw) {
+			try {
+				const parsed: unknown = JSON.parse(raw);
+				if (
+					typeof parsed === 'object' &&
+					parsed !== null &&
+					!Array.isArray(parsed)
+				) {
+					savedDelta = parsed as DemoDelta;
+				}
+			} catch {
+				// ignore corrupt cookie — fall back to default seed data
+			}
+		}
+
+		const demoKV = new DemoKV(savedDelta);
+		event.locals.kv = demoKV as unknown as App.Locals['kv'];
+		event.locals.demo = true;
+		event.locals.authenticated = true;
+		event.locals.authMode = 'cloudflare-access';
+		const response = await resolve(event);
+
+		// Persist the accumulated delta back to the browser so the next request
+		// (and localStorage — see +layout.svelte) picks up all mutations.
+		const deltaJson = JSON.stringify(demoKV.getDelta());
+		response.headers.append(
+			'Set-Cookie',
+			`${DEMO_STATE_COOKIE}=${encodeURIComponent(deltaJson)}; Path=/; SameSite=Lax; Max-Age=604800; Secure`
+		);
+
+		for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+			response.headers.set(key, value);
+		}
+		return response;
+	}
 
 	if (!platform?.env?.KV) {
 		// During local dev without wrangler, allow through

@@ -19,5 +19,5 @@ export const load: PageServerLoad = async ({ locals }) => {
 	);
 
 	const entries = buckets.flat().sort((a, b) => b.at - a.at).slice(0, 200);
-	return { entries };
+	return { entries, demo: locals.demo ?? false };
 };

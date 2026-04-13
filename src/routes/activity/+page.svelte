@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import DemoBanner from '$lib/components/DemoBanner.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -28,6 +29,10 @@
 <svelte:head>
 	<title>Activity — MailPal</title>
 </svelte:head>
+
+{#if data.demo}
+	<DemoBanner />
+{/if}
 
 <div class="min-h-screen bg-app-bg text-app-text">
 	<div class="max-w-3xl mx-auto px-6 py-10 space-y-6">

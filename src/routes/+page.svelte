@@ -12,6 +12,7 @@
 	import BulkActionBar from '$lib/components/BulkActionBar.svelte';
 	import KeyboardShortcutsDialog from '$lib/components/KeyboardShortcutsDialog.svelte';
 	import OnboardingFlow from '$lib/components/OnboardingFlow.svelte';
+	import DemoBanner from '$lib/components/DemoBanner.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -376,6 +377,10 @@
 </svelte:head>
 
 <svelte:window onkeydown={handleKeydown} />
+
+{#if data.demo}
+	<DemoBanner />
+{/if}
 
 <a
 	href="#main-content"
