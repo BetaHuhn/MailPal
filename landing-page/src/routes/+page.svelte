@@ -1,14 +1,24 @@
 <script lang="ts">
-	// Flow diagram animation
 	import { onMount } from 'svelte';
+  	import { DEMO_URL, GITHUB_URL } from '$lib';
+
 	let mounted = $state(false);
-	onMount(() => { mounted = true; });
-
-	// "How it works" interactive demo
+	let activeTab = $state<'oneline' | 'manual'>('oneline');
+	let platform = $state<'unix' | 'windows'>('unix');
+	let copied = $state(false);
 	let aliasDisabled = $state(false);
-
-	// Setup section copy-to-clipboard
+	let aliasDisabledDelayed = $state(false);
 	let copiedCode = $state<string | null>(null);
+
+	$effect(() => {
+		if (aliasDisabled) {
+			const timeout = setTimeout(() => { aliasDisabledDelayed = true; }, 300);
+			return () => clearTimeout(timeout);
+		} else {
+			aliasDisabledDelayed = false;
+		}
+	});
+
 	async function copyCode(code: string) {
 		try {
 			await navigator.clipboard.writeText(code);
@@ -19,8 +29,19 @@
 		}
 	}
 
-	const GITHUB_URL = 'https://github.com/betahuhn/mailpal';
-	const DEMO_URL = 'https://demo.mailpal.cc';
+	function copyCommand() {
+		navigator.clipboard.writeText(platform === 'unix' ? unixCmd : windowsCmd);
+		copied = true;
+		setTimeout(() => { copied = false; }, 2000);
+	}
+
+	const unixCmd = 'curl -fsSL https://mailpal.cc/install | bash';
+	const windowsCmd = 'irm https://mailpal.cc/install | iex';
+
+	onMount(() => {
+		mounted = true;
+		platform = navigator.userAgent.includes('Windows') ? 'windows' : 'unix';
+	});
 
 	const features = [
 		{
@@ -287,40 +308,24 @@ wrangler pages deploy`
 			<!-- Alias -->
 			<div class="flex flex-col items-center gap-3">
 				<div
-					class="relative px-4 py-3 rounded-2xl flex flex-col items-center gap-1 transition-all duration-500"
+					class="relative px-4 py-3 rounded-2xl flex flex-col items-center gap-1 transition-all duration-300"
 					style={aliasDisabled
 						? 'background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.35)'
 						: 'background: rgba(61,222,200,0.07); border: 1px solid rgba(61,222,200,0.4); box-shadow: 0 0 32px rgba(61,222,200,0.14)'}
 				>
-					{#if aliasDisabled}
-						<div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-red-400" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.35)">Disabled</div>
+					{#if aliasDisabledDelayed}
+						<div class="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-red-400" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.35); backdrop-filter: blur(4px)">Disabled</div>
 					{/if}
-					<span class="text-sm font-mono leading-snug whitespace-nowrap transition-all duration-500" style={aliasDisabled ? 'color: #5c6492; text-decoration: line-through' : 'color: #3ddec8'}>shop-pine-wood</span>
-					<span class="text-sm font-mono leading-snug whitespace-nowrap transition-all duration-500" style={aliasDisabled ? 'color: #5c6492; text-decoration: line-through' : 'color: #3ddec8'}>@yourdomain.com</span>
+					<span class="text-sm font-mono leading-snug whitespace-nowrap transition-all duration-300" style={aliasDisabled ? 'color: #5c6492; text-decoration: line-through' : 'color: #3ddec8'}>shop-pine-wood</span>
+					<span class="text-sm font-mono leading-snug whitespace-nowrap transition-all duration-300" style={aliasDisabled ? 'color: #5c6492; text-decoration: line-through' : 'color: #3ddec8'}>@yourdomain.com</span>
 				</div>
-				<span class="text-xs text-center transition-colors duration-500" style={aliasDisabled ? 'color: rgba(239,68,68,0.5)' : 'color: rgba(61,222,200,0.6)'}>Your Alias</span>
-				<button
-					onclick={() => aliasDisabled = !aliasDisabled}
-					aria-label={aliasDisabled ? 'Re-enable email alias' : 'Disable email alias'}
-					class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300 flex items-center gap-1.5"
-					style={aliasDisabled
-						? 'background: rgba(61,222,200,0.08); border: 1px solid rgba(61,222,200,0.3); color: #3ddec8'
-						: 'background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.28); color: #f87171'}
-				>
-					{#if aliasDisabled}
-						<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-						Re-enable
-					{:else}
-						<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-						Disable Alias
-					{/if}
-				</button>
+				<span class="text-xs text-center transition-colors duration-300" style={aliasDisabled ? 'color: rgba(239,68,68,0.5)' : 'color: rgba(61,222,200,0.6)'}>Your Alias</span>
 			</div>
 
 			<!-- Arrow 2 -->
 			<div class="flex items-center mx-4 sm:mx-8 mb-6">
-				<div class="w-12 sm:w-20 h-px relative transition-colors duration-500" style={aliasDisabled ? 'background: rgba(239,68,68,0.3)' : 'background: #252943'}>
-					{#if aliasDisabled}
+				<div class="w-12 sm:w-20 h-px relative transition-colors duration-300" style={aliasDisabled ? 'background: rgba(239,68,68,0.3)' : 'background: #252943'}>
+					{#if aliasDisabledDelayed}
 						<div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center" style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4)">
 							<svg class="w-3 h-3 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
 						</div>
@@ -329,22 +334,22 @@ wrangler pages deploy`
 						<div class="flow-dot" style="animation-delay: 1.65s"></div>
 					{/if}
 				</div>
-				<svg class="w-2 h-3 ml-px flex-shrink-0 transition-colors duration-500" style={aliasDisabled ? 'color: rgba(239,68,68,0.3)' : 'color: #252943'} viewBox="0 0 6 10" fill="currentColor" aria-hidden="true">
+				<svg class="w-2 h-3 ml-px flex-shrink-0 transition-colors duration-300" style={aliasDisabled ? 'color: rgba(239,68,68,0.3)' : 'color: #252943'} viewBox="0 0 6 10" fill="currentColor" aria-hidden="true">
 					<path d="M0 0L6 5L0 10Z"/>
 				</svg>
 			</div>
 
 			<!-- Protected inbox -->
 			<div class="flex flex-col items-center gap-3">
-				<div class="relative w-16 h-16 rounded-2xl bg-[#1b1e31] flex items-center justify-center transition-all duration-500" style={aliasDisabled ? 'border: 1px solid rgba(239,68,68,0.25); opacity: 0.5' : 'border: 1px solid #252943'}>
+				<div class="relative w-16 h-16 rounded-2xl bg-[#1b1e31] flex items-center justify-center transition-all duration-300" style={aliasDisabled ? 'border: 1px solid rgba(239,68,68,0.25); opacity: 0.5' : 'border: 1px solid #252943'}>
 					<svg class="w-7 h-7 text-[#5c6492]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
 					</svg>
 					<div
-						class="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-500"
-						style={aliasDisabled ? 'background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3)' : 'background: rgba(61,222,200,0.12); border: 1px solid rgba(61,222,200,0.25)'}
+						class="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300"
+						style={aliasDisabled ? 'background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); backdrop-filter: blur(4px)' : 'background: rgba(61,222,200,0.12); border: 1px solid rgba(61,222,200,0.25)'}
 					>
-						{#if aliasDisabled}
+						{#if aliasDisabledDelayed}
 							<svg class="w-3 h-3 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
 						{:else}
 							<svg class="w-3 h-3 text-[#3ddec8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -354,8 +359,27 @@ wrangler pages deploy`
 						{/if}
 					</div>
 				</div>
-				<span class="text-xs text-center leading-tight transition-colors duration-500" style={aliasDisabled ? 'color: rgba(239,68,68,0.4)' : 'color: #5c6492'}>Your<br>Inbox</span>
+				<span class="text-xs text-center leading-tight transition-colors duration-300" style={aliasDisabled ? 'color: rgba(239,68,68,0.4)' : 'color: #5c6492'}>Your<br>Inbox</span>
 			</div>
+		</div>
+
+		<div class="flex items-center justify-center mt-2">
+			<button
+					onclick={() => aliasDisabled = !aliasDisabled}
+					aria-label={aliasDisabled ? 'Re-enable email alias' : 'Disable email alias'}
+					class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300 flex items-center gap-1.5"
+					style={aliasDisabled
+						? 'background: rgba(61,222,200,0.08); border: 1px solid rgba(61,222,200,0.3); color: #3ddec8'
+						: 'background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.28); color: #f87171'}
+				>
+					{#if aliasDisabledDelayed}
+						<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+						Re-enable
+					{:else}
+						<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+						Disable Alias
+					{/if}
+				</button>
 		</div>
 
 		<!-- Steps description -->
@@ -599,14 +623,14 @@ wrangler pages deploy`
 <section id="setup" class="py-20 px-6" style="border-top: 1px solid rgba(37,41,67,0.4)">
 	<div class="max-w-3xl mx-auto">
 		<div class="text-center mb-14">
-			<h2 class="text-3xl font-bold text-[#dde1f5] mb-3">Set up in minutes</h2>
+			<h2 class="text-3xl font-bold text-[#dde1f5] mb-3">Set up in Minutes</h2>
 			<p class="text-[#5c6492] text-lg max-w-xl mx-auto">
-				You'll need a Cloudflare account, a domain managed by Cloudflare, Node.js 18+, and Wrangler CLI.
+				Deploy MailPal to your own Cloudflare account with a single command.
 			</p>
 		</div>
 
 		<!-- Prerequisites -->
-		<div class="bg-[#1b1e31] border border-[#252943] rounded-xl p-5 mb-8">
+		<div class="bg-[#1b1e31] border border-[#252943] rounded-xl p-5 mb-6">
 			<h3 class="text-sm font-semibold text-[#dde1f5] mb-3 flex items-center gap-2">
 				<svg class="w-4 h-4 text-[#3ddec8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
@@ -617,7 +641,7 @@ wrangler pages deploy`
 				{#each [
 					'A Cloudflare account (free)',
 					'A domain added to Cloudflare',
-					'Node.js 18+',
+					'Node.js 18+ or Bun',
 					'Wrangler CLI (npm i -g wrangler)'
 				] as req}
 					<li class="flex items-center gap-2 text-sm text-[#5c6492]">
@@ -630,21 +654,116 @@ wrangler pages deploy`
 			</ul>
 		</div>
 
-		<!-- Steps -->
-		<div class="space-y-4">
-			{#each steps as step}
-				<div class="bg-[#1b1e31] border border-[#252943] rounded-xl overflow-hidden p-5 space-y-2">
-					<div class="flex items-start gap-3">
-						<div
-							class="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
-							style="background: rgba(61,222,200,0.1); border: 1px solid rgba(61,222,200,0.25); color: #3ddec8"
-						>
-							{step.number}
-						</div>
-						<h3 class="text-base font-semibold text-[#dde1f5] mb-1">{step.title}</h3>
-					</div>
+		<!-- Tab switcher -->
+		<div class="flex rounded-xl bg-[#161929] border border-[#252943] p-1 gap-1 mb-6">
+			<button
+				onclick={() => activeTab = 'oneline'}
+				class="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all {activeTab === 'oneline' ? 'bg-[#3ddec8] text-[#161929] shadow-sm' : 'text-[#5c6492] hover:text-[#dde1f5]'}"
+			>
+				One-Line Install
+			</button>
+			<button
+				onclick={() => activeTab = 'manual'}
+				class="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all {activeTab === 'manual' ? 'bg-[#3ddec8] text-[#161929] shadow-sm' : 'text-[#5c6492] hover:text-[#dde1f5]'}"
+			>
+				Manual Setup
+			</button>
+		</div>
 
-					<div class="flex-1 min-w-0 space-y-2">
+		{#if activeTab === 'oneline'}
+			<div class="space-y-4">
+				<!-- Command block -->
+				<div class="bg-[#1b1e31] border border-[#252943] rounded-xl overflow-hidden">
+					<div class="flex items-center justify-between px-2.5 py-2.5 border-b border-[#252943]/60">
+						<!-- <div class="flex items-center gap-2.5">
+							<div class="flex gap-1.5" aria-hidden="true">
+								<div class="w-2.5 h-2.5 rounded-full bg-[#252943]"></div>
+								<div class="w-2.5 h-2.5 rounded-full bg-[#252943]"></div>
+								<div class="w-2.5 h-2.5 rounded-full bg-[#252943]"></div>
+							</div>
+							<span class="text-xs text-[#5c6492]">{platform === 'windows' ? 'PowerShell' : 'Terminal'}</span>
+						</div> -->
+
+						<!-- Platform selector -->
+							<div class="flex gap-2">
+								{#each [{ id: 'unix', label: 'macOS / Linux' }, { id: 'windows', label: 'Windows' }] as p}
+									<button
+										onclick={() => platform = p.id as 'unix' | 'windows'}
+										class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors {platform === p.id ? 'border-[#3ddec8]/40 text-[#3ddec8] bg-[#3ddec8]/[0.08]' : 'border-[#252943] text-[#5c6492] hover:text-[#dde1f5]'}"
+									>
+										{p.label}
+									</button>
+								{/each}
+							</div>
+
+						<div class="flex items-center gap-3">
+							
+
+							<button
+								onclick={copyCommand}
+								class="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors {copied ? 'text-[#3ddec8] bg-[#3ddec8]/10' : 'text-[#5c6492] hover:text-[#dde1f5] hover:bg-[#21253c]'}"
+							>
+								{#if copied}
+									<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+									</svg>
+									Copied!
+								{:else}
+									<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+									</svg>
+									Copy
+								{/if}
+							</button>
+						</div>
+					</div>
+					{#if platform === 'unix'}
+						<pre class="px-4 py-3.5 text-sm text-[#3ddec8] font-mono overflow-x-auto leading-relaxed"><code>{unixCmd}</code></pre>
+					{:else}
+						<pre class="px-4 py-3.5 text-sm text-[#3ddec8] font-mono overflow-x-auto leading-relaxed"><code>{windowsCmd}</code></pre>
+					{/if}
+				</div>
+
+				<!-- What it does -->
+				<div class="bg-[#1b1e31] border border-[#252943] rounded-xl p-5">
+					<h4 class="text-sm font-semibold text-[#dde1f5] mb-3">The setup script will:</h4>
+					<ul class="space-y-2">
+						{#each [
+							'Authenticate with Cloudflare via Wrangler',
+							'Clone the repository to your machine',
+							'Create a KV namespace and configure both workers',
+							'Deploy the email worker to Cloudflare Workers',
+							'Build and deploy the dashboard to Cloudflare Pages',
+							'Optionally set a login password for the dashboard',
+						] as item}
+							<li class="flex items-start gap-2.5 text-sm text-[#5c6492]">
+								<svg class="w-3.5 h-3.5 text-[#3ddec8]/70 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+								</svg>
+								{item}
+							</li>
+						{/each}
+					</ul>
+					<p class="text-xs text-[#5c6492] mt-4 pt-4 border-t border-[#252943]/60">
+						After setup, configure a catch-all Email Routing rule in the Cloudflare dashboard pointing to <code class="text-[#dde1f5]">mailpal-email-worker</code>.
+					</p>
+				</div>
+			</div>
+		{:else}
+			<!-- Manual steps -->
+			<div class="space-y-4">
+				{#each steps as step}
+					<div class="bg-[#1b1e31] border border-[#252943] rounded-xl overflow-hidden p-5 space-y-2">
+						<div class="flex items-start gap-3">
+							<div
+								class="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+								style="background: rgba(61,222,200,0.1); border: 1px solid rgba(61,222,200,0.25); color: #3ddec8"
+							>
+								{step.number}
+							</div>
+							<h3 class="text-base font-semibold text-[#dde1f5] mb-1">{step.title}</h3>
+						</div>
+						<div class="flex-1 min-w-0 space-y-2">
 							{#if step.description}
 								<p class="text-sm text-[#5c6492] leading-relaxed">{@html step.description}</p>
 							{/if}
@@ -697,9 +816,10 @@ wrangler pages deploy`
 								<p class="text-sm text-[#5c6492] mt-2.5 leading-relaxed">{@html step.note}</p>
 							{/if}
 						</div>
-				</div>
-			{/each}
-		</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
 
 		<div class="mt-8 text-center">
 			<a
@@ -776,13 +896,13 @@ wrangler pages deploy`
 			<a href={DEMO_URL} target="_blank" rel="noopener noreferrer" class="text-sm text-[#5c6492] hover:text-[#dde1f5] transition-colors">
 				Live Demo
 			</a>
+			<a href="#setup" class="text-sm text-[#5c6492] hover:text-[#dde1f5] transition-colors">Setup</a>
 			<a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" class="text-sm text-[#5c6492] hover:text-[#dde1f5] transition-colors flex items-center gap-1.5">
 				<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 					<path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/>
 				</svg>
 				GitHub
 			</a>
-			<a href="#setup" class="text-sm text-[#5c6492] hover:text-[#dde1f5] transition-colors">Setup</a>
 		</div>
 	</div>
 </footer>

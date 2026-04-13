@@ -1,5 +1,7 @@
 <p align="center">
-  <img src="./static/icon.svg" alt="MailPal" width="96" height="96" style="border-radius: 22px" />
+  <a href="https://mailpal.cc">
+    <img src="./static/icon.svg" alt="MailPal" width="96" height="96" style="border-radius: 22px" />
+  </a>
 </p>
 
 <h3 align="center">MailPal</h3>
@@ -10,20 +12,21 @@
 </p>
 
 <p align="center">
-  <a href="#screenshots"><strong>Screenshots</strong></a> ·
+  <a href="https://mailpal.cc"><strong>Website</strong></a> ·
+  <a href="https://demo.mailpal.cc"><strong>Live Demo</strong></a> ·
   <a href="#features"><strong>Features</strong></a> ·
-  <a href="#how-it-works"><strong>How it works</strong></a> ·
-  <a href="#setup"><strong>Setup</strong></a> ·
-  <a href="#local-development"><strong>Development</strong></a>
+  <a href="#setup"><strong>Setup</strong></a>
 </p>
 
 <br/>
 
 ## Introduction
 
-MailPal lets you create unique email aliases for every service you sign up to — so your real address is never exposed. When an alias gets spammy, disable it in one click. Every alias forwards to your real inbox, invisibly.
+[MailPal](https://mailpal.cc) lets you create unique email aliases for every service you sign up to — so your real address is never exposed. When an alias gets spammy, disable it in one click. Every alias forwards to your real inbox, invisibly.
 
 Unlike other alias services, **MailPal runs entirely inside your own Cloudflare account**. Your emails never touch a third-party server. Zero subscriptions, zero data sharing — just your Workers, your KV, and your rules.
+
+Try the [live demo](https://demo.mailpal.cc) to see how it works, or read on for setup instructions and implementation details.
 
 ## Screenshots
 
@@ -79,11 +82,36 @@ When a message arrives:
 
 ## Setup
 
-### Prerequisites
+### Quick setup (recommended)
+
+**macOS / Linux**
+```bash
+curl -fsSL https://mailpal.cc/install | bash
+```
+
+**Windows (PowerShell)**
+```powershell
+irm https://mailpal.cc/install | iex
+```
+
+This will download the setup executable from the [latest release](https://github.com/betahuhn/mailpal/releases/latest), and run it automatically.
+
+The setup executable will authenticate with Cloudflare, clone this repo, create a KV namespace, deploy the email worker, and deploy the Pages dashboard. Once it finishes, follow the [Email Routing](#4-configure-cloudflare-email-routing) step to connect your domain.
+
+> **Prefer Bun?** If you already have [Bun](https://bun.sh) installed:
+> ```bash
+> bun run https://raw.githubusercontent.com/betahuhn/mailpal/main/scripts/setup.ts
+> ```
+
+---
+
+### Manual setup
+
+#### Prerequisites
 
 - A Cloudflare account
 - A domain added to Cloudflare (DNS managed by Cloudflare)
-- [Node.js](https://nodejs.org) 18+
+- [Bun](https://bun.sh) or [Node.js](https://nodejs.org) 18+
 - [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/) installed and authenticated (`wrangler login`)
 
 ---
