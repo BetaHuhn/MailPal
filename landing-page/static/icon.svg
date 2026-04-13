@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" shape-rendering="geometricPrecision">
+  <defs>
+    <!-- Background -->
+    <linearGradient id="bg" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1e2344"/>
+      <stop offset="100%" stop-color="#121527"/>
+    </linearGradient>
+
+    <!-- Envelope body -->
+    <linearGradient id="envBody" x1="512" y1="284" x2="512" y2="764" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#272c52"/>
+      <stop offset="100%" stop-color="#1d2248"/>
+    </linearGradient>
+
+    <!-- Teal flap -->
+    <linearGradient id="tealFlap" x1="180" y1="284" x2="844" y2="540" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#44e8d0"/>
+      <stop offset="100%" stop-color="#23c4ac"/>
+    </linearGradient>
+
+    <!-- Flap specular highlight (glass sheen) -->
+    <linearGradient id="flapSheen" x1="180" y1="284" x2="180" y2="500" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Ambient teal glow -->
+    <radialGradient id="tealGlow" cx="512" cy="390" r="360" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3ddec8" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#3ddec8" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Vignette at edges -->
+    <radialGradient id="vignette" cx="512" cy="512" r="512" gradientUnits="userSpaceOnUse">
+      <stop offset="60%" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.35"/>
+    </radialGradient>
+
+    <!-- Clip path for envelope shape -->
+    <clipPath id="envClip">
+      <rect x="180" y="284" width="664" height="480" rx="52" ry="52"/>
+    </clipPath>
+
+    <!-- Shadow filter -->
+    <filter id="envShadow" x="-15%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="24" stdDeviation="40" flood-color="#000000" flood-opacity="0.55"/>
+    </filter>
+
+    <!-- Subtle blur for glow behind flap -->
+    <filter id="glowBlur" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="28"/>
+    </filter>
+  </defs>
+
+  <!-- ── Background squircle ───────────────────────────────────── -->
+  <rect width="1024" height="1024" rx="230" fill="url(#bg)"/>
+
+  <!-- Ambient teal glow -->
+  <ellipse cx="512" cy="390" rx="400" ry="300" fill="url(#tealGlow)"/>
+
+  <!-- ── Envelope ──────────────────────────────────────────────── -->
+
+  <!-- Drop shadow -->
+  <rect x="180" y="284" width="664" height="480" rx="52" fill="black" opacity="0.45" filter="url(#envShadow)"/>
+
+  <!-- Envelope body -->
+  <rect x="180" y="284" width="664" height="480" rx="52" fill="url(#envBody)"/>
+
+  <!-- Envelope border -->
+  <rect x="180" y="284" width="664" height="480" rx="52" fill="none" stroke="rgba(255,255,255,0.085)" stroke-width="1.5"/>
+
+  <!-- Bottom fold lines (V from lower corners meeting at center) -->
+  <g clip-path="url(#envClip)">
+    <path
+      d="M 180 764 L 512 556 L 844 764"
+      fill="none"
+      stroke="rgba(255,255,255,0.058)"
+      stroke-width="1.5"
+    />
+  </g>
+
+  <!-- ── Teal flap (smooth curved arch) ───────────────────────── -->
+  <!--
+    Path: start top-left → straight line to top-right →
+    quadratic bezier arching DOWN to top-left.
+    Control point at (512, 748) puts the arch bottom at
+    y ≈ (284 + 748)/2 = 516  — exactly mid-envelope.
+  -->
+  <g clip-path="url(#envClip)">
+
+    <!-- Glow bleed behind flap -->
+    <path d="M 180 284 L 844 284 Q 512 748 180 284 Z"
+      fill="#3ddec8" opacity="0.22" filter="url(#glowBlur)"/>
+
+    <!-- Flap fill -->
+    <path d="M 180 284 L 844 284 Q 512 748 180 284 Z"
+      fill="url(#tealFlap)"/>
+
+    <!-- Specular sheen on flap -->
+    <path d="M 180 284 L 844 284 Q 512 748 180 284 Z"
+      fill="url(#flapSheen)"/>
+
+    <!-- Arch edge line (thin highlight) -->
+    <path d="M 180 284 Q 512 748 844 284"
+      fill="none"
+      stroke="rgba(255,255,255,0.18)"
+      stroke-width="1.5"/>
+  </g>
+
+  <!-- ── Forward arrow (lower half of envelope) ───────────────── -->
+  <g opacity="0.52">
+    <!-- Shaft -->
+    <line x1="434" y1="650" x2="562" y2="650"
+      stroke="#3ddec8" stroke-width="26" stroke-linecap="round"/>
+    <!-- Arrowhead -->
+    <path d="M 534 622 L 592 650 L 534 678"
+      fill="none"
+      stroke="#3ddec8"
+      stroke-width="26"
+      stroke-linecap="round"
+      stroke-linejoin="round"/>
+  </g>
+
+  <!-- ── Edge vignette (depth) ────────────────────────────────── -->
+  <rect width="1024" height="1024" rx="230" fill="url(#vignette)"/>
+</svg>

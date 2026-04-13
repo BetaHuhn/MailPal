@@ -1,0 +1,40 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+@theme {
+	--color-app-bg: #161929;
+	--color-app-sidebar: #131625;
+	--color-app-surface: #1b1e31;
+	--color-app-hover: #21253c;
+	--color-app-border: #252943;
+	--color-app-text: #dde1f5;
+	--color-app-muted: #5c6492;
+	--color-app-accent: #3ddec8;
+	--color-app-accent-dim: #0d2e28;
+
+	--font-family-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+@layer base {
+	html,
+	body {
+		background-color: #161929;
+		color: #dde1f5;
+		scroll-behavior: smooth;
+	}
+
+	::-webkit-scrollbar {
+		width: 6px;
+		height: 6px;
+	}
+	::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	::-webkit-scrollbar-thumb {
+		background: #2b2f4c;
+		border-radius: 9999px;
+	}
+	::-webkit-scrollbar-thumb:hover {
+		background: #3a4070;
+	}
+}
