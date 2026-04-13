@@ -23,7 +23,14 @@ export const handle: Handle = async ({ event, resolve }) => {
 		const raw = event.cookies.get(DEMO_STATE_COOKIE);
 		if (raw) {
 			try {
-				savedDelta = JSON.parse(raw);
+				const parsed: unknown = JSON.parse(raw);
+				if (
+					typeof parsed === 'object' &&
+					parsed !== null &&
+					!Array.isArray(parsed)
+				) {
+					savedDelta = parsed as DemoDelta;
+				}
 			} catch {
 				// ignore corrupt cookie — fall back to default seed data
 			}
@@ -41,7 +48,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		const deltaJson = JSON.stringify(demoKV.getDelta());
 		response.headers.append(
 			'Set-Cookie',
-			`${DEMO_STATE_COOKIE}=${encodeURIComponent(deltaJson)}; Path=/; SameSite=Lax; Max-Age=604800`
+			`${DEMO_STATE_COOKIE}=${encodeURIComponent(deltaJson)}; Path=/; SameSite=Lax; Max-Age=604800; Secure`
 		);
 
 		for (const [key, value] of Object.entries(SECURITY_HEADERS)) {

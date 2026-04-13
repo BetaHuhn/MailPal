@@ -12,7 +12,7 @@
 	onMount(() => {
 		if (!data.demo) return;
 		try {
-			const match = document.cookie.match(/(?:^|;\s*)demo_state=([^;]*)/);
+			const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${DEMO_COOKIE}=([^;]*)`) );
 			if (match) {
 				// Mirror the server-written cookie into localStorage so the user can
 				// inspect / clear their demo session data from the browser devtools.
@@ -23,7 +23,7 @@
 				// the saved state without requiring a manual page refresh.
 				const saved = localStorage.getItem(DEMO_LS_KEY);
 				if (saved) {
-					document.cookie = `${DEMO_COOKIE}=${encodeURIComponent(saved)}; path=/; max-age=604800; SameSite=Lax`;
+					document.cookie = `${DEMO_COOKIE}=${encodeURIComponent(saved)}; path=/; max-age=604800; SameSite=Lax; Secure`;
 				}
 			}
 		} catch {
