@@ -231,6 +231,11 @@
 		if (tab === 'activity' && !logLoaded) loadLog();
 	}
 
+	function expandToActivity() {
+		expanded = true;
+		switchTab('activity');
+	}
+
 	// Reset tab when collapsing
 	$effect(() => {
 		if (!expanded) {
@@ -398,8 +403,9 @@
 		<div class="hidden md:flex items-center gap-2 shrink-0">
 			<Tooltip.Root delayDuration={300}>
 				<Tooltip.Trigger
-					class="flex items-center gap-1 text-xs text-app-muted cursor-default"
-					aria-label="{alias.blockedCount} emails blocked"
+					onclick={(e) => { e.stopPropagation(); expandToActivity(); }}
+					class="flex items-center gap-1 text-xs text-app-muted cursor-pointer hover:text-app-text transition-colors"
+					aria-label="{alias.blockedCount} emails blocked — click to view activity"
 				>
 					<svg class="w-3.5 h-3.5 text-red-400/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
 						<circle cx="12" cy="12" r="10" stroke-width="2" />
@@ -409,7 +415,7 @@
 				</Tooltip.Trigger>
 				<Tooltip.Portal>
 					<Tooltip.Content class="z-50 px-2 py-1 rounded-md bg-app-surface border border-app-border text-xs text-app-text shadow-md" sideOffset={4}>
-						{alias.blockedCount} blocked
+						{alias.blockedCount} blocked — click to view activity
 						<Tooltip.Arrow class="text-app-border" />
 					</Tooltip.Content>
 				</Tooltip.Portal>
@@ -417,8 +423,9 @@
 
 			<Tooltip.Root delayDuration={300}>
 				<Tooltip.Trigger
-					class="flex items-center gap-1 text-xs text-app-muted cursor-default"
-					aria-label="{alias.forwardedCount} emails forwarded"
+					onclick={(e) => { e.stopPropagation(); expandToActivity(); }}
+					class="flex items-center gap-1 text-xs text-app-muted cursor-pointer hover:text-app-text transition-colors"
+					aria-label="{alias.forwardedCount} emails forwarded — click to view activity"
 				>
 					<svg class="w-3.5 h-3.5 text-green-400/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -427,7 +434,7 @@
 				</Tooltip.Trigger>
 				<Tooltip.Portal>
 					<Tooltip.Content class="z-50 px-2 py-1 rounded-md bg-app-surface border border-app-border text-xs text-app-text shadow-md" sideOffset={4}>
-						{alias.forwardedCount} forwarded
+						{alias.forwardedCount} forwarded — click to view activity
 						<Tooltip.Arrow class="text-app-border" />
 					</Tooltip.Content>
 				</Tooltip.Portal>
