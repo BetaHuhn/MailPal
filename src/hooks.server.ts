@@ -1,5 +1,6 @@
 import { redirect, type Handle } from '@sveltejs/kit';
 import { verifySession, COOKIE_NAME } from '$lib/auth.js';
+import { DemoKV } from '$lib/demo-kv.js';
 
 const SECURITY_HEADERS: Record<string, string> = {
 	'X-Content-Type-Options': 'nosniff',
@@ -10,6 +11,19 @@ const SECURITY_HEADERS: Record<string, string> = {
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const platform = event.platform;
+
+	// ── Demo mode ───────────────────────────────────────────────────────────
+	if (platform?.env?.DEMO_MODE) {
+		event.locals.kv = new DemoKV() as unknown as App.Locals['kv'];
+		event.locals.demo = true;
+		event.locals.authenticated = true;
+		event.locals.authMode = 'cloudflare-access';
+		const response = await resolve(event);
+		for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+			response.headers.set(key, value);
+		}
+		return response;
+	}
 
 	if (!platform?.env?.KV) {
 		// During local dev without wrangler, allow through

@@ -6,6 +6,7 @@ declare global {
 			env: {
 				KV: KVNamespace;
 				AUTH_PASSWORD?: string;
+				DEMO_MODE?: string;
 			};
 			context: {
 				waitUntil(promise: Promise<unknown>): void;
@@ -16,6 +17,7 @@ declare global {
 			kv: KVNamespace;
 			authMode: 'password' | 'cloudflare-access';
 			authenticated: boolean;
+			demo?: boolean;
 		}
 		interface Error {}
 		interface PageData {}

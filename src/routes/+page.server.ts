@@ -16,5 +16,5 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const allAliases = (await Promise.all(domains.map((d) => listAliases(locals.kv, d.domain)))).flat();
 	allAliases.sort((a, b) => b.createdAt - a.createdAt);
 
-	return { domains, allAliases, destinations, tags, onboarded: onboardedFlag === '1' };
+	return { domains, allAliases, destinations, tags, onboarded: onboardedFlag === '1', demo: locals.demo ?? false };
 };
