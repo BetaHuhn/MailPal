@@ -20,17 +20,27 @@
 
 	const LAST_STEP = 4;
 
+	function getForceShowOnboarding() {
+		try {
+			return localStorage.getItem('forceShowOnboarding') === '1';
+		} catch {
+			return false;
+		}
+	}
+
 	onMount(() => {
+		const forceShowOnboarding = getForceShowOnboarding();
+
 		// 1. localStorage — instant skip, no flash
 		try {
-			if (localStorage.getItem('mailpal_onboarded')) {
+			if (!forceShowOnboarding && localStorage.getItem('mailpal_onboarded')) {
 				show = false;
 				return;
 			}
 		} catch { /* storage unavailable */ }
 
 		// 2. SSR backend value — already completed on another device/browser
-		if (onboarded) {
+		if (!forceShowOnboarding && onboarded) {
 			try { localStorage.setItem('mailpal_onboarded', '1'); } catch { /* ignore */ }
 			show = false;
 			return;

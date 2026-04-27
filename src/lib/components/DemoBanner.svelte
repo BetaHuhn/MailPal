@@ -24,7 +24,7 @@
 
 	<button
 		on:click={forceShowOnboarding}
-		class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-app-accent-dim text-app-bg text-xs font-semibold hover:brightness-110 transition-all shrink-0"
+		class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-app-accent-dim text-app-text text-xs font-semibold hover:brightness-110 transition-all shrink-0"
 	>
 		What's this?
 	</button>
