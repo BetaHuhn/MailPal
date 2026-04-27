@@ -108,6 +108,7 @@
 		setTimeout(() => {
 			show = false;
 			try { localStorage.setItem('mailpal_onboarded', '1'); } catch { /* ignore */ }
+			try { localStorage.setItem('forceShowOnboarding', '0'); } catch { /* ignore */ }
 			fetch('/api/onboarded', { method: 'POST' }).catch(() => { /* non-critical */ });
 		}, 300);
 	}

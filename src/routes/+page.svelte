@@ -13,6 +13,7 @@
 	import KeyboardShortcutsDialog from '$lib/components/KeyboardShortcutsDialog.svelte';
 	import OnboardingFlow from '$lib/components/OnboardingFlow.svelte';
 	import DemoBanner from '$lib/components/DemoBanner.svelte';
+  import { onMount } from 'svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -24,6 +25,7 @@
 	let selectedDomain = $state<string | null>(null);
 	let selectedTags = $state<string[]>([]);
 	let search = $state('');
+	let forceShowOnboarding = $state<boolean>(false);
 
 	// Sort & filter
 	type SortField = 'name' | 'created' | 'lastUsed' | 'forwarded';
@@ -370,6 +372,13 @@
 				break;
 		}
 	}
+
+	onMount(() => {
+		const forceShowOnboardingValue = localStorage.getItem('forceShowOnboarding');
+		if (forceShowOnboardingValue === '1') {
+			forceShowOnboarding = true;
+		}
+	})
 </script>
 
 <svelte:head>
@@ -389,7 +398,7 @@
 	Skip to main content
 </a>
 
-<OnboardingFlow onboarded={data.onboarded} />
+<OnboardingFlow onboarded={data.onboarded && !forceShowOnboarding} />
 
 <div class="flex {data.demo ? 'h-[calc(100vh-45px)]' : 'h-screen'} overflow-hidden bg-app-bg text-app-text">
 	<Sidebar

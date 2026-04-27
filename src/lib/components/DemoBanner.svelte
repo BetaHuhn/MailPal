@@ -1,3 +1,10 @@
+<script lang="ts">
+	function forceShowOnboarding() {
+		localStorage.setItem('forceShowOnboarding', '1');
+		window.location.reload();
+	}
+</script>
+
 <div
 	role="banner"
 	class="flex items-center justify-center gap-3 px-4 py-2.5 bg-app-accent-dim border-b border-app-accent/30 text-sm"
@@ -14,4 +21,11 @@
 		</svg>
 		View on GitHub
 	</a>
+
+	<button
+		on:click={forceShowOnboarding}
+		class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-app-accent-dim text-app-bg text-xs font-semibold hover:brightness-110 transition-all shrink-0"
+	>
+		What's this?
+	</button>
 </div>
