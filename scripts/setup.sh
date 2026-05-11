@@ -15,7 +15,12 @@ download_text() {
   fi
 }
 
-LATEST_RELEASE_TAG="$(download_text "https://api.github.com/repos/${REPO}/releases/latest" | tr -d '\n' | sed -n 's/.*"tag_name":"\([^"]*\)".*/\1/p')"
+LATEST_RELEASE_JSON="$(download_text "https://api.github.com/repos/${REPO}/releases/latest")"
+if command -v jq &>/dev/null; then
+  LATEST_RELEASE_TAG="$(printf '%s' "${LATEST_RELEASE_JSON}" | jq -r '.tag_name // empty')"
+else
+  LATEST_RELEASE_TAG="$(printf '%s' "${LATEST_RELEASE_JSON}" | tr -d '\n' | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+fi
 if [ -z "${LATEST_RELEASE_TAG}" ]; then
   echo "Failed to resolve latest MailPal release tag." >&2
   exit 1
@@ -46,7 +51,7 @@ else
   fi
 fi
 
-if [ ! -x "${BUN_BIN}" ] && [ "${BUN_BIN}" != "bun" ]; then
+if [ ! -x "${BUN_BIN}" ]; then
   echo "Bun installation was not detected. Please ensure Bun is installed and available in PATH or BUN_INSTALL." >&2
   exit 1
 fi

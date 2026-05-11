@@ -27,6 +27,7 @@ if (Get-Command bun -ErrorAction SilentlyContinue) {
 if (-not (Test-Path $bunBin)) {
     throw 'Bun installation was not detected. Please ensure Bun is installed and available in PATH or BUN_INSTALL.'
 }
+$null = & $bunBin --version
 
 # ── Download and run setup script ─────────────────────────────────────────────
 
