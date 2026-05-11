@@ -111,7 +111,24 @@ if [ "${OS}" = "Darwin" ] && { [ "${STATUS}" -eq 137 ] || [ "${STATUS}" -eq 9 ];
   echo "Falling back to the source installer (scripts/setup.ts) via Bun..." >&2
 
   if command -v bun &>/dev/null; then
-    exec bun run "https://raw.githubusercontent.com/${REPO}/main/scripts/setup.ts" "$@"
+    FALLBACK_TS="$(mktemp "${TMPDIR:-/tmp}/mailpal-setup-ts.XXXXXX.ts")"
+
+    if command -v curl &>/dev/null; then
+      curl -fsSL "https://raw.githubusercontent.com/${REPO}/main/scripts/setup.ts" -o "${FALLBACK_TS}"
+    elif command -v wget &>/dev/null; then
+      wget -qO "${FALLBACK_TS}" "https://raw.githubusercontent.com/${REPO}/main/scripts/setup.ts"
+    else
+      echo "Neither curl nor wget found. Cannot download fallback installer." >&2
+      exit 1
+    fi
+
+    set +e
+    bun run "${FALLBACK_TS}" "$@"
+    BUN_STATUS=$?
+    set -e
+
+    rm -f "${FALLBACK_TS}" || true
+    exit "${BUN_STATUS}"
   fi
 
   echo "Bun is required for fallback mode but was not found." >&2

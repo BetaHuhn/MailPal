@@ -42,12 +42,12 @@ const log = {
 
 // ── User input ────────────────────────────────────────────────────────────────
 
-const rl = createInterface({ input: process.stdin, output: process.stdout });
-
 function prompt(question: string, defaultVal = ""): Promise<string> {
   const hint = defaultVal ? ` ${c.dim}(${defaultVal})${c.reset}` : "";
   return new Promise((resolve) => {
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
     rl.question(`  ${c.bold}?${c.reset} ${question}${hint}: `, (answer) => {
+      rl.close();
       resolve(answer.trim() || defaultVal);
     });
   });
@@ -62,13 +62,62 @@ async function confirm(question: string, defaultYes = true): Promise<boolean> {
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
 
-function stripAnsi(str: string): string {
+function toText(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (value == null) return "";
+
+  if (value instanceof Uint8Array) {
+    return new TextDecoder().decode(value);
+  }
+
+  if (value instanceof ArrayBuffer) {
+    return new TextDecoder().decode(new Uint8Array(value));
+  }
+
+  if (ArrayBuffer.isView(value)) {
+    return new TextDecoder().decode(
+      new Uint8Array(value.buffer, value.byteOffset, value.byteLength)
+    );
+  }
+
+  return String(value);
+}
+
+function stripAnsi(str: unknown): string {
+  const text = toText(str);
   // eslint-disable-next-line no-control-regex
-  return str.replace(/\x1b\[[0-9;]*[mGKHF]/g, "");
+  return text.replace(/\x1b\[[0-9;]*[mGKHF]/g, "");
+}
+
+function extractJsonArray(text: string): string | null {
+  const start = text.indexOf("[");
+  const end = text.lastIndexOf("]");
+
+  if (start === -1 || end === -1 || end < start) {
+    return null;
+  }
+
+  return text.slice(start, end + 1);
 }
 
 function commandExists(cmd: string): boolean {
   return Bun.which(cmd) !== null;
+}
+
+async function runCommandCapture(command: string[], cwd: string): Promise<string> {
+  const proc = Bun.spawn(command, {
+    cwd,
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+
+  const [stdout, stderr] = await Promise.all([
+    new Response(proc.stdout).text(),
+    new Response(proc.stderr).text(),
+  ]);
+
+  await proc.exited;
+  return stripAnsi(stdout) + stripAnsi(stderr);
 }
 
 // Wrangler may live globally, in node_modules/.bin, or be fetched via bunx.
@@ -215,6 +264,7 @@ async function createKvNamespace(repoPath: string): Promise<string> {
   log.info('Creating KV namespace "mailpal" on Cloudflare…');
 
   let output = "";
+  let namespaceAlreadyExists = false;
   try {
     // Run from repoPath so wrangler picks up the project name from wrangler.toml.
     const result = await $`${wr} kv namespace create mailpal`.cwd(repoPath);
@@ -229,6 +279,7 @@ async function createKvNamespace(repoPath: string): Promise<string> {
       output.toLowerCase().includes("already exists") ||
       output.toLowerCase().includes("duplicate")
     ) {
+      namespaceAlreadyExists = true;
       log.warn("A namespace with this name already exists.");
     } else {
       log.warn("wrangler kv namespace create returned an error:");
@@ -246,16 +297,79 @@ async function createKvNamespace(repoPath: string): Promise<string> {
     return match[1];
   }
 
+  if (namespaceAlreadyExists) {
+    log.info("Looking up existing KV namespaces to find the namespace ID…");
+
+    try {
+      const listText = (
+        await runCommandCapture([...wr, "kv", "namespace", "list", "--json"], repoPath)
+      ).trim();
+      const jsonArray = extractJsonArray(listText);
+      if (!jsonArray) {
+        throw new Error("No JSON array found in wrangler output");
+      }
+
+      const namespaces = JSON.parse(jsonArray);
+
+      if (Array.isArray(namespaces)) {
+        const exact = namespaces.find(
+          (ns: any) =>
+            typeof ns?.title === "string" &&
+            ns.title === "mailpal" &&
+            typeof ns?.id === "string" &&
+            /^[a-f0-9]{32}$/i.test(ns.id)
+        );
+
+        if (exact) {
+          log.success(
+            `Using existing namespace ID: ${c.cyan}${exact.id}${c.reset}`
+          );
+          return exact.id;
+        }
+
+        const candidates = namespaces.filter(
+          (ns: any) =>
+            typeof ns?.title === "string" &&
+            ns.title.toLowerCase().includes("mailpal") &&
+            typeof ns?.id === "string"
+        );
+
+        if (candidates.length > 0) {
+          log.warn("Found matching namespaces:");
+          for (const candidate of candidates) {
+            console.log(
+              `  - ${candidate.title}: ${c.cyan}${candidate.id}${c.reset}`
+            );
+          }
+          log.blank();
+        }
+      }
+    } catch {
+      try {
+        const listResult = await $`${wr} kv namespace list`.cwd(repoPath);
+        const listText = stripAnsi(listResult.text()).trim();
+        if (listText) {
+          log.warn("Could not auto-select the namespace ID. Existing namespaces:");
+          log.blank();
+          console.log(c.dim + listText + c.reset);
+          log.blank();
+        }
+      } catch {
+        log.warn("Could not list namespaces automatically.");
+      }
+    }
+  }
+
   // Fallback: ask the user.
   log.warn("Could not auto-detect the KV namespace ID from wrangler output.");
-  if (output.trim()) {
+  if (output.trim() && !namespaceAlreadyExists) {
     log.blank();
     console.log(c.dim + output.trim() + c.reset);
     log.blank();
   }
 
   const id = await prompt(
-    'Enter the KV namespace ID shown above (32-character hex string)'
+    "Enter the KV namespace ID (32-character hex string)"
   );
   if (!/^[a-f0-9]{32}$/i.test(id)) {
     log.error("That doesn't look like a valid KV namespace ID.");
@@ -425,7 +539,6 @@ async function main() {
   const go = await confirm("Ready to start?");
   if (!go) {
     console.log("  Setup cancelled.");
-    rl.close();
     process.exit(0);
   }
 
@@ -439,12 +552,10 @@ async function main() {
   await deployDashboard(repoPath);
   await configureAuth(repoPath);
 
-  rl.close();
   printNextSteps();
 }
 
 main().catch((err) => {
   log.error(`Unexpected error: ${err?.message ?? err}`);
-  rl.close();
   process.exit(1);
 });
