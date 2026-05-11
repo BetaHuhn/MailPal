@@ -11,7 +11,7 @@
 
 import { $ } from "bun";
 import { createInterface } from "readline";
-import { readFileSync, writeFileSync, existsSync } from "fs";
+import { readFileSync, writeFileSync, existsSync, createReadStream } from "fs";
 import { join, resolve } from "path";
 
 // ── Terminal styling ──────────────────────────────────────────────────────────
@@ -45,9 +45,22 @@ const log = {
 function prompt(question: string, defaultVal = ""): Promise<string> {
   const hint = defaultVal ? ` ${c.dim}(${defaultVal})${c.reset}` : "";
   return new Promise((resolve) => {
-    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    // When piped via `curl | bash`, process.stdin is not a real TTY.
+    // Open /dev/tty by path so readline can read keystrokes interactively.
+    let input: NodeJS.ReadableStream = process.stdin;
+    let ttyStream: ReturnType<typeof createReadStream> | null = null;
+    if (!process.stdin.isTTY) {
+      try {
+        ttyStream = createReadStream("/dev/tty");
+        input = ttyStream;
+      } catch {
+        // No controlling terminal — fall back to stdin
+      }
+    }
+    const rl = createInterface({ input, output: process.stdout, terminal: true });
     rl.question(`  ${c.bold}?${c.reset} ${question}${hint}: `, (answer) => {
       rl.close();
+      ttyStream?.destroy();
       resolve(answer.trim() || defaultVal);
     });
   });

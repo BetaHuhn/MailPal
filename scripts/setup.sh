@@ -129,10 +129,4 @@ if [ "${EXPECTED_SHA256}" != "${ACTUAL_SHA256}" ]; then
   exit 1
 fi
 
-# When piped via `curl | bash`, stdin is the pipe (at EOF). Re-open stdin
-# from the controlling terminal so interactive prompts work correctly.
-if [ ! -t 0 ]; then
-  exec < /dev/tty 2>/dev/null || true
-fi
-
 "${BUN_BIN}" run "${SETUP_TS}" "$@"
