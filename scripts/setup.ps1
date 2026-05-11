@@ -1,42 +1,75 @@
 $ErrorActionPreference = 'Stop'
 
-$repo   = 'betahuhn/mailpal'
-$binary = 'mailpal-setup-windows-x64.exe'
-$baseUrl = "https://github.com/$repo/releases/latest/download"
-$url     = "$baseUrl/$binary"
+$repo       = 'betahuhn/mailpal'
+$setupAssetName = 'mailpal-setup.ts'
+$checksumAssetName = 'mailpal-setup-checksums.txt'
 
-Write-Host "Downloading $binary..."
+if ($env:MAILPAL_RELEASE_TAG) {
+    $releaseTag = $env:MAILPAL_RELEASE_TAG
+} else {
+    try {
+        $latestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases/latest"
+    } catch {
+        throw "Failed to fetch latest MailPal release metadata from GitHub: $($_.Exception.Message)"
+    }
 
-$dest = Join-Path $env:TEMP ([System.IO.Path]::GetRandomFileName() + '.exe')
-$checksums = Join-Path $env:TEMP ([System.IO.Path]::GetRandomFileName() + '.txt')
-Invoke-WebRequest -Uri $url -OutFile $dest
-Invoke-WebRequest -Uri "$baseUrl/mailpal-setup-checksums.txt" -OutFile $checksums
+    if (-not $latestRelease.tag_name) {
+        throw 'Failed to resolve latest MailPal release tag.'
+    }
 
-Write-Host "Verifying checksum..."
+    $releaseTag = $latestRelease.tag_name
+}
+$setupTsUrl = "https://github.com/$repo/releases/download/$releaseTag/$setupAssetName"
+$setupChecksumsUrl = "https://github.com/$repo/releases/download/$releaseTag/$checksumAssetName"
 
-$expected = $null
-foreach ($line in Get-Content -Path $checksums) {
-    if ($line -match [regex]::Escape($binary)) {
-        $parts = $line -split '\s+'
-        if ($parts.Count -gt 0) {
-            $expected = $parts[0].Trim()
-            break
-        }
+# ── Ensure Bun is available ───────────────────────────────────────────────────
+
+if (Get-Command bun -ErrorAction SilentlyContinue) {
+    $bunBin = (Get-Command bun -ErrorAction SilentlyContinue).Source
+} else {
+    Write-Host "Bun not found, installing..."
+    powershell -Command "irm bun.sh/install.ps1 | iex"
+
+    $bunCommand = Get-Command bun -ErrorAction SilentlyContinue
+    if ($bunCommand) {
+        $bunBin = $bunCommand.Source
+    } else {
+        $bunInstallRoot = if ($env:BUN_INSTALL) { $env:BUN_INSTALL } else { Join-Path $env:USERPROFILE '.bun' }
+        $bunBin = Join-Path $bunInstallRoot 'bin\bun.exe'
     }
 }
 
-if (-not $expected) {
-    throw "Checksum for $binary not found in checksums file."
+if (-not (Test-Path $bunBin)) {
+    throw 'Bun installation was not detected. Please ensure Bun is installed and available in PATH or BUN_INSTALL.'
 }
+$null = & $bunBin --version
 
-$actual = (Get-FileHash -Path $dest -Algorithm SHA256).Hash.ToLowerInvariant()
-if ($actual -ne $expected.ToLowerInvariant()) {
-    throw "Checksum mismatch for $binary! Expected: $expected Actual: $actual"
-}
+# ── Download and run setup script ─────────────────────────────────────────────
 
+$setupTs = Join-Path $env:TEMP ([System.IO.Path]::GetRandomFileName() + '.ts')
+$setupChecksums = Join-Path $env:TEMP ([System.IO.Path]::GetRandomFileName() + '.txt')
 try {
-    & $dest @args
+    try {
+        Invoke-WebRequest -Uri $setupTsUrl -OutFile $setupTs
+        Invoke-WebRequest -Uri $setupChecksumsUrl -OutFile $setupChecksums
+    } catch {
+        throw "Failed to download setup release assets. If this release predates setup assets, set MAILPAL_RELEASE_TAG to a release that includes them. Original error: $($_.Exception.Message)"
+    }
+
+    $escapedSetupAssetName = [regex]::Escape($setupAssetName)
+    $expectedHashLine = Select-String -Path $setupChecksums -Pattern "^[a-fA-F0-9]{64}\s+(?:.*[\\/])?$escapedSetupAssetName$" | Select-Object -First 1
+    if (-not $expectedHashLine) {
+        throw "Failed to find checksum for $setupAssetName in $checksumAssetName."
+    }
+
+    $expectedHash = ($expectedHashLine.Line -split '\s+')[0].ToLowerInvariant()
+    $actualHash = (Get-FileHash -Path $setupTs -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($expectedHash -ne $actualHash) {
+        throw "Checksum verification failed for $setupAssetName."
+    }
+
+    & $bunBin run $setupTs @args
 } finally {
-    Remove-Item $dest -ErrorAction SilentlyContinue
-    Remove-Item $checksums -ErrorAction SilentlyContinue
+    Remove-Item $setupTs -ErrorAction SilentlyContinue
+    Remove-Item $setupChecksums -ErrorAction SilentlyContinue
 }
