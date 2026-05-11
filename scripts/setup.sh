@@ -96,14 +96,20 @@ fi
 
 # ── Download and run setup script ─────────────────────────────────────────────
 
-SETUP_TS="$(mktemp "${TMPDIR:-/tmp}/mailpal-setup.XXXXXX.ts")"
-CHECKSUMS_FILE="$(mktemp "${TMPDIR:-/tmp}/mailpal-setup-checksums.XXXXXX.txt")"
+SETUP_TS_TMP="$(mktemp "${TMPDIR:-/tmp}/mailpal-setup.XXXXXX")"
+SETUP_TS="${SETUP_TS_TMP}.ts"
+mv "${SETUP_TS_TMP}" "${SETUP_TS}"
+
+CHECKSUMS_FILE_TMP="$(mktemp "${TMPDIR:-/tmp}/mailpal-setup-checksums.XXXXXX")"
+CHECKSUMS_FILE="${CHECKSUMS_FILE_TMP}.txt"
+mv "${CHECKSUMS_FILE_TMP}" "${CHECKSUMS_FILE}"
+
 trap 'rm -f "${SETUP_TS}" "${CHECKSUMS_FILE}"' EXIT
 
 download_file "${SETUP_TS_URL}" "${SETUP_TS}" "download MailPal setup asset (if unavailable, set MAILPAL_RELEASE_TAG to a release that includes setup assets)"
 download_file "${CHECKSUMS_URL}" "${CHECKSUMS_FILE}" "download MailPal setup checksums (if unavailable, set MAILPAL_RELEASE_TAG to a release that includes setup assets)"
 
-EXPECTED_SHA256="$(awk -v name="${SETUP_ASSET_NAME}" '{hash=$1; $1=""; sub(/^[[:space:]]+/, "", $0); if ($0 == name) { print hash; exit }}' "${CHECKSUMS_FILE}")"
+EXPECTED_SHA256="$(awk -v name="${SETUP_ASSET_NAME}" '{hash=$1; $1=""; sub(/^[[:space:]]+/, "", $0); if ($0 == name || $0 ~ "(^|/)" name "$") { print hash; exit }}' "${CHECKSUMS_FILE}")"
 if [ -z "${EXPECTED_SHA256}" ]; then
   echo "Failed to find checksum for ${SETUP_ASSET_NAME} in ${CHECKSUM_ASSET_NAME}." >&2
   exit 1

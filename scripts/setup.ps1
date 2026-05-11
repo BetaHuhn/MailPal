@@ -57,7 +57,7 @@ try {
     }
 
     $escapedSetupAssetName = [regex]::Escape($setupAssetName)
-    $expectedHashLine = Select-String -Path $setupChecksums -Pattern "^[a-fA-F0-9]{64}\s+$escapedSetupAssetName$" | Select-Object -First 1
+    $expectedHashLine = Select-String -Path $setupChecksums -Pattern "^[a-fA-F0-9]{64}\s+(?:.*[\\/])?$escapedSetupAssetName$" | Select-Object -First 1
     if (-not $expectedHashLine) {
         throw "Failed to find checksum for $setupAssetName in $checksumAssetName."
     }
