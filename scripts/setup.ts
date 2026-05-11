@@ -391,31 +391,39 @@ async function createKvNamespace(repoPath: string): Promise<string> {
   return id;
 }
 
-// ── Step 6: Patch wrangler configs ───────────────────────────────────────────
+// ── Step 6: Create wrangler configs ──────────────────────────────────────────
 
-async function patchConfigs(repoPath: string, kvId: string): Promise<void> {
-  log.step(6, STEPS, "Updating wrangler configuration files");
+async function createConfigs(repoPath: string, kvId: string): Promise<void> {
+  log.step(6, STEPS, "Creating wrangler configuration files");
 
-  const files = [
-    join(repoPath, "wrangler.toml"),
-    join(repoPath, "email-worker", "wrangler.toml"),
-  ];
+  const rootConfig = `name = "mailpal"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".svelte-kit/cloudflare"
 
-  for (const file of files) {
-    if (!existsSync(file)) {
-      log.warn(`Config not found, skipping: ${file}`);
-      continue;
-    }
-    const original = readFileSync(file, "utf-8");
-    // Replace any existing id value under [[kv_namespaces]]
-    const patched = original.replace(/(id\s*=\s*")[^"]*(")/g, `$1${kvId}$2`);
-    if (patched === original) {
-      log.warn(`No id field found to replace in ${file}`);
-    } else {
-      writeFileSync(file, patched, "utf-8");
-      log.success(`Patched ${file.replace(repoPath + "/", "")}`);
-    }
-  }
+[[kv_namespaces]]
+binding = "KV"
+id = "${kvId}"
+`;
+
+  const workerConfig = `name = "mailpal-email-worker"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[kv_namespaces]]
+binding = "KV"
+id = "${kvId}"
+`;
+
+  const rootFile = join(repoPath, "wrangler.toml");
+  const workerFile = join(repoPath, "email-worker", "wrangler.toml");
+
+  writeFileSync(rootFile, rootConfig, "utf-8");
+  log.success("Created wrangler.toml");
+
+  writeFileSync(workerFile, workerConfig, "utf-8");
+  log.success("Created email-worker/wrangler.toml");
 }
 
 // ── Step 7: Deploy email worker ───────────────────────────────────────────────
@@ -560,7 +568,7 @@ async function main() {
   const repoPath = await resolveRepo();
   await installDeps(repoPath);
   const kvId = await createKvNamespace(repoPath);
-  await patchConfigs(repoPath, kvId);
+  await createConfigs(repoPath, kvId);
   await deployWorker(repoPath);
   await deployDashboard(repoPath);
   await configureAuth(repoPath);
