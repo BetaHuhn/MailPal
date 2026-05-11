@@ -49,10 +49,15 @@ $null = & $bunBin --version
 $setupTs = Join-Path $env:TEMP ([System.IO.Path]::GetRandomFileName() + '.ts')
 $setupChecksums = Join-Path $env:TEMP ([System.IO.Path]::GetRandomFileName() + '.txt')
 try {
-    Invoke-WebRequest -Uri $setupTsUrl -OutFile $setupTs
-    Invoke-WebRequest -Uri $setupChecksumsUrl -OutFile $setupChecksums
+    try {
+        Invoke-WebRequest -Uri $setupTsUrl -OutFile $setupTs
+        Invoke-WebRequest -Uri $setupChecksumsUrl -OutFile $setupChecksums
+    } catch {
+        throw "Failed to download setup release assets. If this release predates setup assets, set MAILPAL_RELEASE_TAG to a release that includes them. Original error: $($_.Exception.Message)"
+    }
 
-    $expectedHashLine = Select-String -Path $setupChecksums -Pattern "^[a-fA-F0-9]{64}\s+$setupAssetName$" | Select-Object -First 1
+    $escapedSetupAssetName = [regex]::Escape($setupAssetName)
+    $expectedHashLine = Select-String -Path $setupChecksums -Pattern "^[a-fA-F0-9]{64}\s+$escapedSetupAssetName$" | Select-Object -First 1
     if (-not $expectedHashLine) {
         throw "Failed to find checksum for $setupAssetName in $checksumAssetName."
     }
