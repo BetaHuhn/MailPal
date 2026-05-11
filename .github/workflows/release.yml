@@ -19,6 +19,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Prepare setup assets
+        run: |
+          mkdir -p dist
+          cp scripts/setup.ts dist/mailpal-setup.ts
+          sha256sum dist/mailpal-setup.ts > dist/mailpal-setup-checksums.txt
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
@@ -27,3 +33,6 @@ jobs:
           draft: false
           prerelease: ${{ contains(inputs.tag, '-') }}
           generate_release_notes: true
+          files: |
+            dist/mailpal-setup.ts
+            dist/mailpal-setup-checksums.txt

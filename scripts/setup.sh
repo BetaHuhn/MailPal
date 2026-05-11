@@ -2,31 +2,69 @@
 set -euo pipefail
 
 REPO="betahuhn/mailpal"
+SETUP_ASSET_NAME="mailpal-setup.ts"
+CHECKSUM_ASSET_NAME="mailpal-setup-checksums.txt"
 
 download_text() {
   local url="$1"
+  local context="$2"
+  local response
   if command -v curl &>/dev/null; then
-    curl -fsSL "${url}"
+    if ! response="$(curl -fsSL "${url}")"; then
+      echo "Failed to ${context} from ${url}." >&2
+      exit 1
+    fi
   elif command -v wget &>/dev/null; then
-    wget -qO- "${url}"
+    if ! response="$(wget -qO- "${url}")"; then
+      echo "Failed to ${context} from ${url}." >&2
+      exit 1
+    fi
+  else
+    echo "Neither curl nor wget found. Please install one and try again." >&2
+    exit 1
+  fi
+
+  printf '%s' "${response}"
+}
+
+download_file() {
+  local url="$1"
+  local output="$2"
+  local context="$3"
+  if command -v curl &>/dev/null; then
+    if ! curl -fsSL "${url}" -o "${output}"; then
+      echo "Failed to ${context} from ${url}." >&2
+      exit 1
+    fi
+  elif command -v wget &>/dev/null; then
+    if ! wget -qO "${output}" "${url}"; then
+      echo "Failed to ${context} from ${url}." >&2
+      exit 1
+    fi
   else
     echo "Neither curl nor wget found. Please install one and try again." >&2
     exit 1
   fi
 }
 
-LATEST_RELEASE_JSON="$(download_text "https://api.github.com/repos/${REPO}/releases/latest")"
-if command -v jq &>/dev/null; then
-  LATEST_RELEASE_TAG="$(printf '%s' "${LATEST_RELEASE_JSON}" | jq -r '.tag_name // empty')"
+if [ -n "${MAILPAL_RELEASE_TAG:-}" ]; then
+  LATEST_RELEASE_TAG="${MAILPAL_RELEASE_TAG}"
 else
-  LATEST_RELEASE_TAG="$(printf '%s' "${LATEST_RELEASE_JSON}" | tr -d '\n' | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+  LATEST_RELEASE_JSON="$(download_text "https://api.github.com/repos/${REPO}/releases/latest" "fetch latest MailPal release metadata")"
+  if command -v jq &>/dev/null; then
+    LATEST_RELEASE_TAG="$(printf '%s' "${LATEST_RELEASE_JSON}" | jq -r '.tag_name // empty')"
+  else
+    LATEST_RELEASE_TAG="$(printf '%s' "${LATEST_RELEASE_JSON}" | tr -d '\n' | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"
+  fi
 fi
+
 if [ -z "${LATEST_RELEASE_TAG}" ]; then
   echo "Failed to resolve latest MailPal release tag." >&2
   exit 1
 fi
 
-SETUP_TS_URL="https://raw.githubusercontent.com/${REPO}/${LATEST_RELEASE_TAG}/scripts/setup.ts"
+SETUP_TS_URL="https://github.com/${REPO}/releases/download/${LATEST_RELEASE_TAG}/${SETUP_ASSET_NAME}"
+CHECKSUMS_URL="https://github.com/${REPO}/releases/download/${LATEST_RELEASE_TAG}/${CHECKSUM_ASSET_NAME}"
 
 # ── Ensure Bun is available ───────────────────────────────────────────────────
 
@@ -59,14 +97,29 @@ fi
 # ── Download and run setup script ─────────────────────────────────────────────
 
 SETUP_TS="$(mktemp "${TMPDIR:-/tmp}/mailpal-setup.XXXXXX.ts")"
-trap 'rm -f "${SETUP_TS}"' EXIT
+CHECKSUMS_FILE="$(mktemp "${TMPDIR:-/tmp}/mailpal-setup-checksums.XXXXXX.txt")"
+trap 'rm -f "${SETUP_TS}" "${CHECKSUMS_FILE}"' EXIT
 
-if command -v curl &>/dev/null; then
-  curl -fsSL "${SETUP_TS_URL}" -o "${SETUP_TS}"
-elif command -v wget &>/dev/null; then
-  wget -qO "${SETUP_TS}" "${SETUP_TS_URL}"
+download_file "${SETUP_TS_URL}" "${SETUP_TS}" "download MailPal setup asset"
+download_file "${CHECKSUMS_URL}" "${CHECKSUMS_FILE}" "download MailPal setup checksums"
+
+EXPECTED_SHA256="$(awk -v name="${SETUP_ASSET_NAME}" '$2 == name { print $1; exit }' "${CHECKSUMS_FILE}")"
+if [ -z "${EXPECTED_SHA256}" ]; then
+  echo "Failed to find checksum for ${SETUP_ASSET_NAME} in ${CHECKSUM_ASSET_NAME}." >&2
+  exit 1
+fi
+
+if command -v sha256sum &>/dev/null; then
+  ACTUAL_SHA256="$(sha256sum "${SETUP_TS}" | awk '{print $1}')"
+elif command -v shasum &>/dev/null; then
+  ACTUAL_SHA256="$(shasum -a 256 "${SETUP_TS}" | awk '{print $1}')"
 else
-  echo "Neither curl nor wget found. Please install one and try again." >&2
+  echo "Neither sha256sum nor shasum found. Please install one and try again." >&2
+  exit 1
+fi
+
+if [ "${EXPECTED_SHA256}" != "${ACTUAL_SHA256}" ]; then
+  echo "Checksum verification failed for ${SETUP_ASSET_NAME}." >&2
   exit 1
 fi
 

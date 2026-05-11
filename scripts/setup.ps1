@@ -1,11 +1,26 @@
 $ErrorActionPreference = 'Stop'
 
 $repo       = 'betahuhn/mailpal'
-$latestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases/latest"
-if (-not $latestRelease.tag_name) {
-    throw 'Failed to resolve latest MailPal release tag.'
+$setupAssetName = 'mailpal-setup.ts'
+$checksumAssetName = 'mailpal-setup-checksums.txt'
+
+if ($env:MAILPAL_RELEASE_TAG) {
+    $releaseTag = $env:MAILPAL_RELEASE_TAG
+} else {
+    try {
+        $latestRelease = Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases/latest"
+    } catch {
+        throw "Failed to fetch latest MailPal release metadata from GitHub: $($_.Exception.Message)"
+    }
+
+    if (-not $latestRelease.tag_name) {
+        throw 'Failed to resolve latest MailPal release tag.'
+    }
+
+    $releaseTag = $latestRelease.tag_name
 }
-$setupTsUrl = "https://raw.githubusercontent.com/$repo/$($latestRelease.tag_name)/scripts/setup.ts"
+$setupTsUrl = "https://github.com/$repo/releases/download/$releaseTag/$setupAssetName"
+$setupChecksumsUrl = "https://github.com/$repo/releases/download/$releaseTag/$checksumAssetName"
 
 # ── Ensure Bun is available ───────────────────────────────────────────────────
 
@@ -32,9 +47,24 @@ $null = & $bunBin --version
 # ── Download and run setup script ─────────────────────────────────────────────
 
 $setupTs = Join-Path $env:TEMP ([System.IO.Path]::GetRandomFileName() + '.ts')
+$setupChecksums = Join-Path $env:TEMP ([System.IO.Path]::GetRandomFileName() + '.txt')
 try {
     Invoke-WebRequest -Uri $setupTsUrl -OutFile $setupTs
+    Invoke-WebRequest -Uri $setupChecksumsUrl -OutFile $setupChecksums
+
+    $expectedHashLine = Select-String -Path $setupChecksums -Pattern "^[a-fA-F0-9]{64}\s+$setupAssetName$" | Select-Object -First 1
+    if (-not $expectedHashLine) {
+        throw "Failed to find checksum for $setupAssetName in $checksumAssetName."
+    }
+
+    $expectedHash = ($expectedHashLine.Line -split '\s+')[0].ToLowerInvariant()
+    $actualHash = (Get-FileHash -Path $setupTs -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($expectedHash -ne $actualHash) {
+        throw "Checksum verification failed for $setupAssetName."
+    }
+
     & $bunBin run $setupTs @args
 } finally {
     Remove-Item $setupTs -ErrorAction SilentlyContinue
+    Remove-Item $setupChecksums -ErrorAction SilentlyContinue
 }
