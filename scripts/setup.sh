@@ -2,140 +2,37 @@
 set -euo pipefail
 
 REPO="betahuhn/mailpal"
-BASE_URL="https://github.com/${REPO}/releases/latest/download"
+SETUP_TS_URL="https://raw.githubusercontent.com/${REPO}/main/scripts/setup.ts"
 
-# ── Detect OS and arch ────────────────────────────────────────────────────────
+# ── Ensure Bun is available ───────────────────────────────────────────────────
 
-OS="$(uname -s)"
-ARCH="$(uname -m)"
-
-case "${OS}" in
-  Linux)
-    case "${ARCH}" in
-      x86_64)  BINARY="mailpal-setup-linux-x64" ;;
-      aarch64) BINARY="mailpal-setup-linux-arm64" ;;
-      *)
-        echo "Unsupported architecture: ${ARCH}" >&2
-        exit 1
-        ;;
-    esac
-    ;;
-  Darwin)
-    case "${ARCH}" in
-      x86_64)  BINARY="mailpal-setup-macos-x64" ;;
-      arm64)   BINARY="mailpal-setup-macos-arm64" ;;
-      *)
-        echo "Unsupported architecture: ${ARCH}" >&2
-        exit 1
-        ;;
-    esac
-    ;;
-  *)
-    echo "Unsupported OS: ${OS}" >&2
-    echo "For Windows, download the setup executable manually from:" >&2
-    echo "  https://github.com/${REPO}/releases/latest" >&2
+if command -v bun &>/dev/null; then
+  BUN_BIN="bun"
+else
+  echo "Bun not found, installing..."
+  if command -v curl &>/dev/null; then
+    curl -fsSL https://bun.sh/install | bash
+  elif command -v wget &>/dev/null; then
+    wget -qO- https://bun.sh/install | bash
+  else
+    echo "Neither curl nor wget found. Please install one and try again." >&2
     exit 1
-    ;;
-esac
+  fi
+  BUN_BIN="${HOME}/.bun/bin/bun"
+fi
 
-# ── Download ──────────────────────────────────────────────────────────────────
+# ── Download and run setup script ─────────────────────────────────────────────
 
-DEST="$(mktemp "${TMPDIR:-/tmp}/mailpal-setup.XXXXXX")"
-CHECKSUM_FILE="$(mktemp "${TMPDIR:-/tmp}/mailpal-setup-checksums.XXXXXX")"
-trap 'rm -f "${DEST}" "${CHECKSUM_FILE}"' EXIT
-
-echo "Downloading ${BINARY}..."
+SETUP_TS="$(mktemp "${TMPDIR:-/tmp}/mailpal-setup.XXXXXX.ts")"
+trap 'rm -f "${SETUP_TS}"' EXIT
 
 if command -v curl &>/dev/null; then
-  curl -fsSL "${BASE_URL}/${BINARY}" -o "${DEST}"
-  curl -fsSL "${BASE_URL}/mailpal-setup-checksums.txt" -o "${CHECKSUM_FILE}"
+  curl -fsSL "${SETUP_TS_URL}" -o "${SETUP_TS}"
 elif command -v wget &>/dev/null; then
-  wget -qO "${DEST}" "${BASE_URL}/${BINARY}"
-  wget -qO "${CHECKSUM_FILE}" "${BASE_URL}/mailpal-setup-checksums.txt"
+  wget -qO "${SETUP_TS}" "${SETUP_TS_URL}"
 else
   echo "Neither curl nor wget found. Please install one and try again." >&2
   exit 1
 fi
 
-# ── Verify checksum ───────────────────────────────────────────────────────────
-
-echo "Verifying checksum..."
-
-EXPECTED="$(grep "${BINARY}" "${CHECKSUM_FILE}" | awk '{print $1}')"
-if [ -z "${EXPECTED}" ]; then
-  echo "Checksum for ${BINARY} not found in checksums file." >&2
-  exit 1
-fi
-
-if command -v sha256sum &>/dev/null; then
-  ACTUAL="$(sha256sum "${DEST}" | awk '{print $1}')"
-elif command -v shasum &>/dev/null; then
-  ACTUAL="$(shasum -a 256 "${DEST}" | awk '{print $1}')"
-else
-  echo "Neither sha256sum nor shasum found. Cannot verify checksum." >&2
-  exit 1
-fi
-
-if [ "${ACTUAL}" != "${EXPECTED}" ]; then
-  echo "Checksum mismatch for ${BINARY}!" >&2
-  echo "  expected: ${EXPECTED}" >&2
-  echo "  actual:   ${ACTUAL}" >&2
-  exit 1
-fi
-
-chmod +x "${DEST}"
-
-if [ "${OS}" = "Darwin" ]; then
-  if command -v xattr &>/dev/null; then
-    xattr -d com.apple.quarantine "${DEST}" &>/dev/null || true
-  fi
-
-  if command -v codesign &>/dev/null; then
-    codesign --force --sign - "${DEST}" &>/dev/null || true
-  fi
-fi
-
-# ── Run ───────────────────────────────────────────────────────────────────────
-
-set +e
-"${DEST}" "$@"
-STATUS=$?
-set -e
-
-if [ "${STATUS}" -eq 0 ]; then
-  exit 0
-fi
-
-if [ "${OS}" = "Darwin" ] && { [ "${STATUS}" -eq 137 ] || [ "${STATUS}" -eq 9 ]; }; then
-  echo "The downloaded setup binary was blocked by macOS (exit ${STATUS})." >&2
-  echo "Falling back to the source installer (scripts/setup.ts) via Bun..." >&2
-
-  if command -v bun &>/dev/null; then
-    FALLBACK_TS="$(mktemp "${TMPDIR:-/tmp}/mailpal-setup-ts.XXXXXX.ts")"
-    trap 'rm -f "${DEST}" "${CHECKSUM_FILE}" "${FALLBACK_TS}"' EXIT
-
-    if command -v curl &>/dev/null; then
-      curl -fsSL "https://raw.githubusercontent.com/${REPO}/main/scripts/setup.ts" -o "${FALLBACK_TS}"
-    elif command -v wget &>/dev/null; then
-      wget -qO "${FALLBACK_TS}" "https://raw.githubusercontent.com/${REPO}/main/scripts/setup.ts"
-    else
-      echo "Neither curl nor wget found. Cannot download fallback installer." >&2
-      exit 1
-    fi
-
-    set +e
-    bun run "${FALLBACK_TS}" "$@"
-    BUN_STATUS=$?
-    set -e
-
-    rm -f "${FALLBACK_TS}" || true
-    exit "${BUN_STATUS}"
-  fi
-
-  echo "Bun is required for fallback mode but was not found." >&2
-  echo "Install Bun and run:" >&2
-  echo "  bun run https://raw.githubusercontent.com/${REPO}/main/scripts/setup.ts" >&2
-  exit 1
-fi
-
-exit "${STATUS}"
+"${BUN_BIN}" run "${SETUP_TS}" "$@"

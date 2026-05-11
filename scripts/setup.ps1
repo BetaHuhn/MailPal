@@ -1,42 +1,24 @@
 $ErrorActionPreference = 'Stop'
 
-$repo   = 'betahuhn/mailpal'
-$binary = 'mailpal-setup-windows-x64.exe'
-$baseUrl = "https://github.com/$repo/releases/latest/download"
-$url     = "$baseUrl/$binary"
+$repo       = 'betahuhn/mailpal'
+$setupTsUrl = "https://raw.githubusercontent.com/$repo/main/scripts/setup.ts"
 
-Write-Host "Downloading $binary..."
+# ── Ensure Bun is available ───────────────────────────────────────────────────
 
-$dest = Join-Path $env:TEMP ([System.IO.Path]::GetRandomFileName() + '.exe')
-$checksums = Join-Path $env:TEMP ([System.IO.Path]::GetRandomFileName() + '.txt')
-Invoke-WebRequest -Uri $url -OutFile $dest
-Invoke-WebRequest -Uri "$baseUrl/mailpal-setup-checksums.txt" -OutFile $checksums
-
-Write-Host "Verifying checksum..."
-
-$expected = $null
-foreach ($line in Get-Content -Path $checksums) {
-    if ($line -match [regex]::Escape($binary)) {
-        $parts = $line -split '\s+'
-        if ($parts.Count -gt 0) {
-            $expected = $parts[0].Trim()
-            break
-        }
-    }
+if (Get-Command bun -ErrorAction SilentlyContinue) {
+    $bunBin = 'bun'
+} else {
+    Write-Host "Bun not found, installing..."
+    powershell -Command "irm bun.sh/install.ps1 | iex"
+    $bunBin = Join-Path $env:USERPROFILE '.bun\bin\bun.exe'
 }
 
-if (-not $expected) {
-    throw "Checksum for $binary not found in checksums file."
-}
+# ── Download and run setup script ─────────────────────────────────────────────
 
-$actual = (Get-FileHash -Path $dest -Algorithm SHA256).Hash.ToLowerInvariant()
-if ($actual -ne $expected.ToLowerInvariant()) {
-    throw "Checksum mismatch for $binary! Expected: $expected Actual: $actual"
-}
-
+$setupTs = Join-Path $env:TEMP ([System.IO.Path]::GetRandomFileName() + '.ts')
 try {
-    & $dest @args
+    Invoke-WebRequest -Uri $setupTsUrl -OutFile $setupTs
+    & $bunBin run $setupTs @args
 } finally {
-    Remove-Item $dest -ErrorAction SilentlyContinue
-    Remove-Item $checksums -ErrorAction SilentlyContinue
+    Remove-Item $setupTs -ErrorAction SilentlyContinue
 }
