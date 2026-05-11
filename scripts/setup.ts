@@ -73,6 +73,40 @@ async function confirm(question: string, defaultYes = true): Promise<boolean> {
   return answer.toLowerCase().startsWith("y");
 }
 
+function promptPassword(question: string): Promise<string> {
+  return new Promise((resolve) => {
+    let input: NodeJS.ReadableStream = process.stdin;
+    let ttyStream: ReturnType<typeof createReadStream> | null = null;
+    if (!process.stdin.isTTY) {
+      try {
+        ttyStream = createReadStream("/dev/tty");
+        input = ttyStream;
+      } catch {
+        // No controlling terminal — fall back to stdin
+      }
+    }
+    const rl = createInterface({ input, output: process.stdout, terminal: true });
+    // Suppress echo for typed characters but allow the question prompt through.
+    let questionWritten = false;
+    (rl as any)._writeToOutput = (str: string) => {
+      if (!questionWritten) {
+        process.stdout.write(str);
+        if (str.includes(": ")) questionWritten = true;
+        return;
+      }
+      // After the prompt, only write the trailing newline when Enter is pressed.
+      if (str === "\r\n" || str === "\n" || str === "\r") {
+        process.stdout.write("\n");
+      }
+    };
+    rl.question(`  ${c.bold}?${c.reset} ${question}: `, (answer) => {
+      rl.close();
+      ttyStream?.destroy();
+      resolve(answer.trim());
+    });
+  });
+}
+
 // ── Utilities ─────────────────────────────────────────────────────────────────
 
 function toText(value: unknown): string {
@@ -489,7 +523,7 @@ async function configureAuth(repoPath: string): Promise<void> {
     return;
   }
 
-  const password = Bun.password("Password");
+  const password = await promptPassword("Password");
   if (!password) {
     log.warn("No password entered, skipping.");
     return;
@@ -566,11 +600,11 @@ async function main() {
   await checkPrerequisites();
   await ensureWranglerAuth();
   const repoPath = await resolveRepo();
-  await installDeps(repoPath);
-  const kvId = await createKvNamespace(repoPath);
-  await createConfigs(repoPath, kvId);
-  await deployWorker(repoPath);
-  await deployDashboard(repoPath);
+  // await installDeps(repoPath);
+  // const kvId = await createKvNamespace(repoPath);
+  // await createConfigs(repoPath, kvId);
+  // await deployWorker(repoPath);
+  // await deployDashboard(repoPath);
   await configureAuth(repoPath);
 
   printNextSteps();
