@@ -112,6 +112,7 @@ if [ "${OS}" = "Darwin" ] && { [ "${STATUS}" -eq 137 ] || [ "${STATUS}" -eq 9 ];
 
   if command -v bun &>/dev/null; then
     FALLBACK_TS="$(mktemp "${TMPDIR:-/tmp}/mailpal-setup-ts.XXXXXX.ts")"
+    trap 'rm -f "${DEST}" "${CHECKSUM_FILE}" "${FALLBACK_TS}"' EXIT
 
     if command -v curl &>/dev/null; then
       curl -fsSL "https://raw.githubusercontent.com/${REPO}/main/scripts/setup.ts" -o "${FALLBACK_TS}"
