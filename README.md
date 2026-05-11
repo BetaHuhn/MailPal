@@ -82,6 +82,13 @@ When a message arrives:
 
 ## Setup
 
+### Prerequisites
+
+- A Cloudflare account
+- A domain added to Cloudflare (DNS managed by Cloudflare)
+- [Bun](https://bun.sh) installed for running setup scripts and managing dependencies
+- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/) installed and authenticated (`wrangler login`)
+
 ### Quick setup (recommended)
 
 **macOS / Linux**
@@ -98,25 +105,13 @@ This will download the setup executable from the [latest release](https://github
 
 The setup executable will authenticate with Cloudflare, clone this repo, create a KV namespace, deploy the email worker, and deploy the Pages dashboard. Once it finishes, follow the [Email Routing](#4-configure-cloudflare-email-routing) step to connect your domain.
 
-> **Prefer Bun?** If you already have [Bun](https://bun.sh) installed:
-> ```bash
-> bun run https://raw.githubusercontent.com/betahuhn/mailpal/main/scripts/setup.ts
-> ```
-
 ---
 
 ### Manual setup
 
-#### Prerequisites
-
-- A Cloudflare account
-- A domain added to Cloudflare (DNS managed by Cloudflare)
-- [Bun](https://bun.sh) or [Node.js](https://nodejs.org) 18+
-- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/) installed and authenticated (`wrangler login`)
-
 ---
 
-### 1. Clone and install
+#### 1. Clone and install
 
 ```bash
 git clone https://github.com/yourname/mailpal
@@ -127,7 +122,7 @@ cd email-worker && npm install && cd ..
 
 ---
 
-### 2. Create a KV namespace
+#### 2. Create a KV namespace
 
 ```bash
 wrangler kv:namespace create mailpal
@@ -151,7 +146,7 @@ id = "YOUR_KV_NAMESPACE_ID"   # same ID as above
 
 ---
 
-### 3. Deploy the email worker
+#### 3. Deploy the email worker
 
 ```bash
 cd email-worker
@@ -162,7 +157,7 @@ Note the worker name — it defaults to `mailpal-email-worker`.
 
 ---
 
-### 4. Configure Cloudflare Email Routing
+#### 4. Configure Cloudflare Email Routing
 
 1. Go to **Cloudflare dashboard → your domain → Email → Email Routing**
 2. Enable Email Routing if not already active
@@ -176,7 +171,7 @@ Note the worker name — it defaults to `mailpal-email-worker`.
 
 ---
 
-### 5. Deploy the dashboard
+#### 5. Deploy the dashboard
 
 ```bash
 npm run build
@@ -187,7 +182,7 @@ Wrangler will create a Pages project on first deploy and give you a `*.pages.dev
 
 ---
 
-### 6. Set a login password *(optional)*
+#### 6. Set a login password *(optional)*
 
 ```bash
 wrangler pages secret put AUTH_PASSWORD
@@ -198,7 +193,7 @@ Without this secret, the dashboard is unprotected. Use [Cloudflare Access](#prot
 
 ---
 
-### 7. Protect with Cloudflare Access *(optional alternative to password)*
+#### 7. Protect with Cloudflare Access *(optional alternative to password)*
 
 1. Go to **Cloudflare dashboard → Zero Trust → Access → Applications**
 2. Click **Add an application → Self-hosted**
