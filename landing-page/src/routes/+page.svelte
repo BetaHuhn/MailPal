@@ -3,7 +3,7 @@
   	import { DEMO_URL, GITHUB_URL } from '$lib';
 
 	let mounted = $state(false);
-	let activeTab = $state<'oneline' | 'manual'>('oneline');
+	let activeTab = $state<'oneline' | 'manual' | 'agent'>('oneline');
 	let platform = $state<'unix' | 'windows'>('unix');
 	let copied = $state(false);
 	let aliasDisabled = $state(false);
@@ -668,6 +668,12 @@ wrangler pages deploy`
 			>
 				Manual Setup
 			</button>
+			<button
+				onclick={() => activeTab = 'agent'}
+				class="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all {activeTab === 'agent' ? 'bg-[#3ddec8] text-[#161929] shadow-sm' : 'text-[#5c6492] hover:text-[#dde1f5]'}"
+			>
+				Agents
+			</button>
 		</div>
 
 		{#if activeTab === 'oneline'}
@@ -818,6 +824,29 @@ wrangler pages deploy`
 						</div>
 					</div>
 				{/each}
+			</div>
+		{:else if activeTab === 'agent'}
+			<div class="space-y-4">
+				<div class="bg-[#1b1e31] border border-[#252943] rounded-xl p-5">
+					<p class="text-sm text-[#5c6492] mb-4">Paste this into any AI coding agent to set up MailPal for you.</p>
+					<div class="relative group/code">
+						<pre class="rounded-lg bg-[#161929] border border-[#252943]/60 p-3.5 text-sm text-[#3ddec8] font-mono overflow-x-auto leading-relaxed"><code>Fetch https://mailpal.cc/setup.md</code></pre>
+						<button
+							onclick={() => copyCode('Fetch https://mailpal.cc/setup.md')}
+							class="absolute top-2 right-2 opacity-0 group-hover/code:opacity-100 transition-opacity px-2 py-1 rounded-md text-[10px] font-medium flex items-center gap-1"
+							style={copiedCode === 'Fetch https://mailpal.cc/setup.md' ? 'background: rgba(61,222,200,0.15); border: 1px solid rgba(61,222,200,0.35); color: #3ddec8' : 'background: rgba(37,41,67,0.95); border: 1px solid rgba(61,222,200,0.18); color: #5c6492'}
+							aria-label={copiedCode === 'Fetch https://mailpal.cc/setup.md' ? 'Prompt copied' : 'Copy prompt'}
+						>
+							{#if copiedCode === 'Fetch https://mailpal.cc/setup.md'}
+								<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+								Copied
+							{:else}
+								<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+								Copy
+							{/if}
+						</button>
+					</div>
+				</div>
 			</div>
 		{/if}
 
